@@ -40,8 +40,6 @@ export type Port = {
   name: string;
   country: string;
   city: string;
-  image?: string | File | null;
-  flag?: string | File | null;
   number_of_berths?: number | null;
   port_type?: string | null;
   average_tat?: number | null;
@@ -59,8 +57,6 @@ export type Port = {
   zoom_center_lat?: number | null;
   zoom_center_lng?: number | null;
   created_at?: Date | string | null;
-  image_s3_name?: string | null;
-  flag_s3_name?: string | null;
 };
 
 export interface PortFormProps {

@@ -11,6 +11,13 @@ import Loader from "./Loader";
 const DEFAULT_ZOOM = 5;
 const DEFAULT_COORDS = { lat: 23, lng: 78.7861 };
 
+// Stop zooming out past the point where the world starts repeating / grey bands show
+const MIN_ZOOM = 3;
+const WORLD_BOUNDS = {
+  latLngBounds: { north: 85, south: -85, west: -180, east: 180 },
+  strictBounds: true,
+};
+
 const MapBoard = ({
   ports,
   kpis,
@@ -54,7 +61,7 @@ const MapBoard = ({
         if (!sourcePort || !sourcePort.ind_port_name) {
           console.warn(
             "Skipping polyline due to missing sourcePort data:",
-            sourcePort
+            sourcePort,
           );
           return null;
         }
@@ -89,6 +96,8 @@ const MapBoard = ({
       mapId={process.env.NEXT_PUBLIC_MAP_ID}
       defaultCenter={DEFAULT_COORDS}
       defaultZoom={DEFAULT_ZOOM}
+      minZoom={MIN_ZOOM}
+      restriction={WORLD_BOUNDS}
       fullscreenControl={false}>
       {!isLoading ? (
         <>

@@ -2,7 +2,6 @@ import {
   authErrorCodes,
   kpiErrorCodes,
   portErrorCodes,
-  s3ErrorCodes,
 } from "@/lib/error-codes";
 
 /** User-facing messages for the API's `errorCode`s. */
@@ -29,8 +28,6 @@ export const errorMessages: Record<number, string> = {
   [kpiErrorCodes.KPI_FAILED_TO_CREATE]: "Failed to create KPI",
   [kpiErrorCodes.KPI_FAILED_TO_UPDATE]: "Failed to update KPI",
   [kpiErrorCodes.INVALID_INITIATIVE_ID]: "Invalid initiative ID",
-
-  [s3ErrorCodes.INVALID_FILE_NAME]: "Invalid file name",
 };
 
 /** Shape of an RTK Query error whose body is the API's JSON error. */

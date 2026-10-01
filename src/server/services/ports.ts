@@ -4,28 +4,51 @@ import { portErrorCodes } from "@/lib/error-codes";
 import { db } from "@/server/db";
 import { portMaster } from "@/server/db/schema";
 import { AppError } from "@/server/errors";
-import { getDownloadUrl } from "@/server/s3";
 
 export type PortInput = Omit<
   typeof portMaster.$inferInsert,
   "port_id" | "created_at"
 >;
 
-/** Signed URL for a stored image, or null when the port has no file. */
-function getImageUrl(key: string) {
-  return key ? getDownloadUrl(key, "image") : null;
+/** Placeholder pictures in public/ports, spread across ports by id. */
+const PORT_PICTURE_COUNT = 6;
+
+/** Countries with a flag in public/flags, named by slug. */
+const FLAG_COUNTRIES = new Set([
+  "belgium",
+  "china",
+  "germany",
+  "india",
+  "netherlands",
+  "nigeria",
+  "qatar",
+  "saudi-arabia",
+  "singapore",
+  "south-africa",
+  "south-korea",
+  "sweden",
+  "united-arab-emirates",
+  "united-states",
+]);
+
+function getImageUrl(portId: number) {
+  return `/ports/port-${(portId % PORT_PICTURE_COUNT) + 1}.svg`;
 }
 
-/** All ports, each with short-lived signed URLs for its image and flag. */
+/** Flag for the port's country, or null when there is no flag file for it. */
+function getFlagUrl(country: string) {
+  const slug = country.trim().toLowerCase().replace(/\s+/g, "-");
+  return FLAG_COUNTRIES.has(slug) ? `/flags/${slug}.png` : null;
+}
+
+/** All ports, each with its picture and country flag. */
 export async function listPorts() {
   const ports = await db.select().from(portMaster);
-  return Promise.all(
-    ports.map(async (port) => ({
-      ...port,
-      image_url: await getImageUrl(port.image_s3_name),
-      flag_url: await getImageUrl(port.flag_s3_name),
-    })),
-  );
+  return ports.map((port) => ({
+    ...port,
+    image_url: getImageUrl(port.port_id),
+    flag_url: getFlagUrl(port.country),
+  }));
 }
 
 export async function getPort(portId: number) {

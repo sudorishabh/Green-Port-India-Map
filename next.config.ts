@@ -22,18 +22,6 @@ const apiSecurityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "sustainable-map-store.s3.ap-south-1.amazonaws.com",
-        port: "",
-        pathname: "/**",
-        // pathname: "/account123/**",
-        search: "",
-      },
-    ],
-  },
   async headers() {
     return [{ source: "/api/:path*", headers: apiSecurityHeaders }];
   },

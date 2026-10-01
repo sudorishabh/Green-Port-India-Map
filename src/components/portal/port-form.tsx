@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
-import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,14 +20,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { useGetS3FileQuery } from "@/lib/portal/features/s3/s3-files-Api";
-import Image from "next/image";
 import { Port, PortFormProps } from "@/lib/portal/types";
 import { useAddPortMutation } from "@/lib/portal/features/ports/portsApiSlice";
 import { useUpdatePortMutation } from "@/lib/portal/features/ports/portsApiSlice";
 import { toast } from "sonner";
-import { useDeleteFileUrlMutation } from "@/lib/portal/features/s3/s3-files-Api";
-import useUploadFileToS3 from "@/hooks/useUploadFileToS3";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
 
 export function PortForm({
@@ -38,47 +33,20 @@ export function PortForm({
   indianPorts = [],
   editingPort,
 }: PortFormProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [selectedFlagFile, setSelectedFlagFile] = useState<File | null>(null);
-  const [flagPreviewUrl, setFlagPreviewUrl] = useState<string | null>(null);
   const [selectedIndianPort, setSelectedIndianPort] = useState<Port | null>(
     null
   );
 
   const [addPort, { isLoading: isAddingPort }] = useAddPortMutation();
   const [updatePort, { isLoading: isUpdatingPort }] = useUpdatePortMutation();
-  const [uploadFile, { isLoading: isUploading }] = useUploadFileToS3();
-  const [deleteFileUrl] = useDeleteFileUrlMutation();
 
-  const isLoading = isAddingPort || isUpdatingPort || isUploading;
-
-  const { data: imageData } = useGetS3FileQuery(
-    {
-      fileName: editingPort?.image_s3_name,
-      fileType: "image/png",
-    },
-    {
-      skip: !editingPort?.image_s3_name,
-    }
-  );
-  const { data: flagData } = useGetS3FileQuery(
-    {
-      fileName: editingPort?.flag_s3_name,
-      fileType: "image/png",
-    },
-    {
-      skip: !editingPort?.flag_s3_name,
-    }
-  );
+  const isLoading = isAddingPort || isUpdatingPort;
 
   const defaultValues = {
     portLocationType: portType || "",
     name: "",
     country: portType === "Indian" ? "India" : "",
     city: "",
-    image: null,
-    flag: null,
     number_of_berths: undefined,
     port_type: "",
     average_tat: undefined,
@@ -105,7 +73,6 @@ export function PortForm({
     reset,
     control,
     formState: { errors },
-    setError,
   } = useForm<Port>({
     defaultValues,
   });
@@ -114,48 +81,6 @@ export function PortForm({
   const watchedIndianPortName = watch("ind_port_name");
   const watchedLat = watch("ind_port_lat");
   const watchedLng = watch("ind_port_lng");
-
-  // Handle image file selection
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      setValue("image", file);
-    }
-  };
-
-  // Clear port image selection
-  const clearPortImage = () => {
-    setSelectedFile(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setPreviewUrl(null);
-    setValue("image", null);
-  };
-
-  // Handle flag image file selection
-  const handleFlagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFlagFile(file);
-      const url = URL.createObjectURL(file);
-      setFlagPreviewUrl(url);
-      setValue("flag", file);
-    }
-  };
-
-  // Clear flag image selection
-  const clearFlagImage = () => {
-    setSelectedFlagFile(null);
-    if (flagPreviewUrl) {
-      URL.revokeObjectURL(flagPreviewUrl);
-    }
-    setFlagPreviewUrl(null);
-    setValue("flag", null);
-  };
 
   // Update fields when an Indian port is selected in the dropdown
   useEffect(() => {
@@ -194,7 +119,6 @@ export function PortForm({
         name: editingPort.name || "",
         country: editingPort.country || "",
         city: editingPort.city || "",
-        // Don't set image and flag directly, we'll handle those separately
         number_of_berths: editingPort.number_of_berths || undefined,
         port_type: editingPort.port_type || "",
         average_tat:
@@ -260,23 +184,7 @@ export function PortForm({
         country: portType === "Indian" ? "India" : "",
       });
     }
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setSelectedFlagFile(null);
-    setFlagPreviewUrl(null);
   }, [editingPort, portType, indianPorts]);
-
-  // Cleanup object URLs on unmount
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-      if (flagPreviewUrl) {
-        URL.revokeObjectURL(flagPreviewUrl);
-      }
-    };
-  }, [previewUrl, flagPreviewUrl]);
 
   const getDialogTitle = () => {
     if (editingPort) {
@@ -290,61 +198,14 @@ export function PortForm({
   };
 
   const handleFormSubmit = async (data: Port) => {
-    const { flag, image, ...rest } = data;
     const editingPortId = editingPort?.port_id;
 
-    // New ports need both files; edited ports only when they have none yet.
-    if (!(image instanceof File) && !editingPort?.image_s3_name) {
-      setError("image", { type: "manual", message: "Image is required" });
-      toast.error("Image is required");
-      return;
-    }
-    if (!(flag instanceof File) && !editingPort?.flag_s3_name) {
-      setError("flag", { type: "manual", message: "Flag is required" });
-      toast.error("Flag is required");
-      return;
-    }
-
-    // Only files uploaded by this submission are cleaned up if saving fails.
-    const uploadedFiles: string[] = [];
-    const uploadIfNew = async (
-      file: Port["image"],
-      type: "image" | "flag",
-      currentFileName?: string | null
-    ) => {
-      if (!(file instanceof File)) return currentFileName ?? null;
-      const fileName = await uploadFile(file, type);
-      uploadedFiles.push(fileName);
-      return fileName;
-    };
-    const deleteFiles = (fileNames: (string | null | false | undefined)[]) =>
-      Promise.all(
-        fileNames
-          .filter((fileName): fileName is string => !!fileName)
-          .map((fileName) => deleteFileUrl({ fileName }))
-      );
-
     try {
-      const formData = {
-        ...rest,
-        flag_s3_name: await uploadIfNew(flag, "flag", editingPort?.flag_s3_name),
-        image_s3_name: await uploadIfNew(
-          image,
-          "image",
-          editingPort?.image_s3_name
-        ),
-      };
-
       if (editingPort && editingPortId) {
-        await updatePort({ port_id: editingPortId, data: formData }).unwrap();
-        // Replaced files are removed only once the port points at the new ones.
-        await deleteFiles([
-          image instanceof File && editingPort.image_s3_name,
-          flag instanceof File && editingPort.flag_s3_name,
-        ]);
+        await updatePort({ port_id: editingPortId, data }).unwrap();
         toast.success(`Port ${editingPort.name} updated successfully.`);
       } else {
-        await addPort(formData).unwrap();
+        await addPort(data).unwrap();
         toast.success(`Port ${data.name} added successfully.`);
       }
       onClose();
@@ -355,7 +216,6 @@ export function PortForm({
           `Failed to ${editingPortId ? "update" : "add"} port. Please try again.`
         )
       );
-      await deleteFiles(uploadedFiles);
     }
   };
 
@@ -516,327 +376,7 @@ export function PortForm({
 
               <Separator />
 
-              {/* Section 3: Image Uploads */}
-              <section>
-                <h3 className='text-lg font-medium mb-4'>Port Visuals</h3>
-                <div className='grid md:grid-cols-2 gap-6'>
-                  {/* Port Image Upload */}
-                  <div className='space-y-3 p-4 border rounded-lg bg-card/50'>
-                    <Label className='text-base font-medium block mb-2'>
-                      Port Image
-                    </Label>
-                    {!editingPort ? (
-                      // ADD MODE
-                      <div className='space-y-3'>
-                        <Label
-                          htmlFor='port-image-add'
-                          className='flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card/80 hover:bg-muted/50 dark:hover:bg-muted/80 dark:bg-card/60 dark:border-muted-foreground/50 dark:hover:border-muted-foreground transition-colors'>
-                          <div className='flex flex-col items-center justify-center pt-5 pb-6'>
-                            <Upload className='w-8 h-8 mb-3 text-muted-foreground' />
-                            <p className='mb-2 text-sm text-muted-foreground'>
-                              <span className='font-semibold'>
-                                Click to upload
-                              </span>{" "}
-                              or drag and drop
-                            </p>
-                            <p className='text-xs text-muted-foreground'>
-                              PNG, JPG, JPEG
-                            </p>
-                          </div>
-                          <Input
-                            id='port-image-add'
-                            type='file'
-                            accept='image/*,.png,.jpg,.jpeg'
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file && file.size > 500 * 1024) {
-                                toast.error("Image must be 500KB or less");
-                                e.target.value = "";
-                                return;
-                              }
-                              handleImageChange(e);
-                            }}
-                            className='sr-only'
-                          />
-                        </Label>
-                        {previewUrl && (
-                          <div className='flex items-center justify-between mt-3 p-2 border rounded-md bg-muted/50'>
-                            <div className='flex items-center space-x-3'>
-                              <div className='w-24 h-16 object-cover rounded-md border'>
-                                <Image
-                                  src={previewUrl}
-                                  alt='Port preview'
-                                  className='h-full w-full object-cover rounded-md border'
-                                  width={94}
-                                  height={64}
-                                />
-                              </div>
-                              <p className='text-sm font-medium text-muted-foreground truncate max-w-[150px]'>
-                                {selectedFile?.name || "Image ready"}
-                              </p>
-                            </div>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='sm'
-                              onClick={clearPortImage}
-                              className='text-destructive hover:text-destructive bg-destructive/10 h-8 w-8 px-7'>
-                              Clear
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      // EDIT MODE
-                      <div className='space-y-3'>
-                        <p className='text-sm font-medium text-muted-foreground mb-1'>
-                          Current Image:
-                        </p>
-                        {imageData?.url ? (
-                          <div className='p-4 w-full h-64 object-cover border rounded-md bg-muted/50 inline-block mb-3'>
-                            <Image
-                              src={imageData?.url}
-                              alt='Current Port'
-                              className='w-full h-full object-cover rounded-md'
-                              width={160}
-                              height={120}
-                              // Short-lived signed S3 URL: skip the optimizer.
-                              unoptimized
-                            />
-                          </div>
-                        ) : editingPort.image_s3_name ? (
-                          <p className='text-sm text-muted-foreground italic mb-3'>
-                            Loading image...
-                          </p>
-                        ) : (
-                          <p className='text-sm text-muted-foreground italic mb-3'>
-                            No image uploaded.
-                          </p>
-                        )}
-
-                        <div className='pt-3 border-t'>
-                          <Label
-                            htmlFor='port-image-update' // Unique ID for edit mode
-                            className='text-sm font-medium text-muted-foreground block mb-1'>
-                            Change Image:
-                          </Label>
-                          <Label
-                            htmlFor='port-image-update' // Match the input ID
-                            className='relative flex items-center justify-center w-full border rounded-lg cursor-pointer bg-card/80 hover:bg-muted/50 dark:hover:bg-muted/80 dark:bg-card/60 dark:border-muted-foreground/50 dark:hover:border-muted-foreground transition-colors p-2'>
-                            <span className='text-sm text-primary hover:underline'>
-                              Choose a different image
-                            </span>
-                            <Input
-                              id='port-image-update' // Ensure this ID matches the htmlFor
-                              type='file'
-                              accept='image/*,.png,.jpg,.jpeg'
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file && file.size > 500 * 1024) {
-                                  toast.error("Image must be 500KB or less");
-                                  e.target.value = "";
-                                  return;
-                                }
-                                handleImageChange(e);
-                              }}
-                              className='sr-only'
-                            />
-                          </Label>
-
-                          {previewUrl && (
-                            <div className='flex items-center justify-between mt-3 p-2 border rounded-md bg-muted/50'>
-                              <div className='flex items-center space-x-3'>
-                                <div className='w-24 h-16 object-cover rounded-md border'>
-                                  <Image
-                                    src={previewUrl}
-                                    width={64}
-                                    height={64}
-                                    alt='New port preview'
-                                    className='h-full w-full object-cover rounded-md border'
-                                  />
-                                </div>
-                                <p className='text-sm font-medium text-muted-foreground truncate max-w-[150px]'>
-                                  {selectedFile?.name || "New image ready"}
-                                </p>
-                              </div>
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='sm'
-                                onClick={clearPortImage}
-                                className='text-destructive hover:text-destructive bg-destructive/10 h-8 w-8 px-7'>
-                                Clear
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    {errors.image && (
-                      <p className='text-sm text-destructive'>
-                        {errors.image.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Flag Image Upload */}
-                  <div className='space-y-3 p-4 border rounded-lg bg-card/50'>
-                    <Label className='text-base font-medium block mb-2'>
-                      Flag Image
-                    </Label>
-                    {!editingPort ? (
-                      // ADD MODE
-                      <div className='space-y-3'>
-                        <Label
-                          htmlFor='flag-image-add'
-                          className='flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card/80 hover:bg-muted/50 dark:hover:bg-muted/80 dark:bg-card/60 dark:border-muted-foreground/50 dark:hover:border-muted-foreground transition-colors'>
-                          <div className='flex flex-col items-center justify-center pt-5 pb-6'>
-                            <Upload className='w-8 h-8 mb-3 text-muted-foreground' />
-                            <p className='mb-2 text-sm text-muted-foreground'>
-                              <span className='font-semibold'>
-                                Click to upload flag
-                              </span>
-                            </p>
-                          </div>
-                          <Input
-                            id='flag-image-add'
-                            type='file'
-                            accept='image/*,.png,.jpg,.jpeg'
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file && file.size > 100 * 1024) {
-                                toast.error("Flag must be 100KB or less");
-                                e.target.value = "";
-                                return;
-                              }
-                              handleFlagChange(e);
-                            }}
-                            className='sr-only'
-                          />
-                        </Label>
-                        {flagPreviewUrl && (
-                          <div className='flex items-center justify-between mt-3 p-2 border rounded-md bg-muted/50'>
-                            <div className='flex items-center space-x-3'>
-                              <div className='w-24 h-16 object-cover rounded-md border'>
-                                <Image
-                                  src={flagPreviewUrl}
-                                  alt='Flag preview'
-                                  className='h-full w-full object-cover rounded-md border'
-                                  width={94}
-                                  height={64}
-                                />
-                              </div>
-                              <p className='text-sm font-medium text-muted-foreground truncate max-w-[150px]'>
-                                {selectedFlagFile?.name || "Flag ready"}
-                              </p>
-                            </div>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='sm'
-                              onClick={clearFlagImage}
-                              className='text-destructive hover:text-destructive bg-destructive/10 h-8 w-8 px-7'>
-                              Clear
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      // EDIT MODE
-                      <div className='space-y-3'>
-                        <p className='text-sm font-medium text-muted-foreground mb-1'>
-                          Current Flag:
-                        </p>
-                        {flagData?.url ? (
-                          <div className='p-4 w-full h-64 object-cover border rounded-md bg-muted/50 inline-block mb-3'>
-                            <Image
-                              src={flagData?.url}
-                              alt='Current Flag'
-                              className='w-full h-full object-cover rounded-md'
-                              width={160}
-                              height={120}
-                              // Short-lived signed S3 URL: skip the optimizer.
-                              unoptimized
-                            />
-                          </div>
-                        ) : editingPort.flag_s3_name ? (
-                          <p className='text-sm text-muted-foreground italic mb-3'>
-                            Loading flag...
-                          </p>
-                        ) : (
-                          <p className='text-sm text-muted-foreground italic mb-3'>
-                            No flag uploaded.
-                          </p>
-                        )}
-
-                        <div className='pt-3 border-t'>
-                          <Label
-                            htmlFor='flag-image-update' // Unique ID for edit mode
-                            className='text-sm font-medium text-muted-foreground block mb-1'>
-                            Change Flag:
-                          </Label>
-                          <Label
-                            htmlFor='flag-image-update' // Match the input ID
-                            className='relative flex items-center justify-center w-full border rounded-lg cursor-pointer bg-card/80 hover:bg-muted/50 dark:hover:bg-muted/80 dark:bg-card/60 dark:border-muted-foreground/50 dark:hover:border-muted-foreground transition-colors p-2'>
-                            <span className='text-sm text-primary hover:underline'>
-                              Choose a different flag
-                            </span>
-                            <Input
-                              id='flag-image-update' // Ensure this ID matches the htmlFor
-                              type='file'
-                              accept='image/*,.png,.jpg,.jpeg'
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file && file.size > 100 * 1024) {
-                                  toast.error("Flag must be 100KB or less");
-                                  e.target.value = "";
-                                  return;
-                                }
-                                handleFlagChange(e);
-                              }}
-                            />
-                          </Label>
-                          {flagPreviewUrl && (
-                            <div className='flex items-center justify-between mt-3 p-2 border rounded-md bg-muted/50'>
-                              <div className='flex items-center space-x-3'>
-                                <div className='w-24 h-16 object-cover rounded-md border'>
-                                  <Image
-                                    src={flagPreviewUrl}
-                                    width={94}
-                                    height={64}
-                                    alt='New flag preview'
-                                    className='h-full w-full object-cover rounded-md border'
-                                  />
-                                </div>
-                                <p className='text-sm font-medium text-muted-foreground truncate max-w-[150px]'>
-                                  {selectedFlagFile?.name || "New flag ready"}
-                                </p>
-                              </div>
-                              <Button
-                                type='button'
-                                variant='ghost'
-                                size='sm'
-                                onClick={clearFlagImage}
-                                className='text-destructive hover:text-destructive bg-destructive/10 h-8 w-8 px-7'>
-                                Clear
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    {errors.flag && (
-                      <p className='text-sm text-destructive'>
-                        {errors.flag.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </section>
-
-              <Separator />
-
-              {/* Section 4: Optional Information */}
+              {/* Section 3: Optional Information */}
               <section>
                 <h3 className='text-lg font-medium mb-1'>
                   Optional Port Details
@@ -939,7 +479,7 @@ export function PortForm({
 
               <Separator />
 
-              {/* Section 5: Conditional Fields */}
+              {/* Section 4: Conditional Fields */}
               {watchedPortLocationType === "Indian" && (
                 <section className='p-6 rounded-lg border bg-emerald-50/50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'>
                   <h3 className='text-lg font-medium text-emerald-800 dark:text-emerald-300 mb-2'>

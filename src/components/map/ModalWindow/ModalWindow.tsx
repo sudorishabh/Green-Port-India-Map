@@ -39,6 +39,7 @@ const ModalWindow = ({
                 <img
                   src={port.flag_url}
                   alt='Flag Icon'
+                  className='size-5 sm:size-6'
                 />
               )}
 

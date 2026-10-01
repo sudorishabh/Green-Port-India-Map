@@ -30,7 +30,3 @@ export const kpiErrorCodes = {
   KPI_FAILED_TO_UPDATE: 3006,
   INVALID_INITIATIVE_ID: 3007,
 } as const;
-
-export const s3ErrorCodes = {
-  INVALID_FILE_NAME: 6001,
-} as const;
