@@ -59,7 +59,7 @@ export function PortForm({
       fileType: "image/png",
     },
     {
-      skip: !editingPort,
+      skip: !editingPort?.image_s3_name,
     }
   );
   const { data: flagData } = useGetS3FileQuery(
@@ -68,7 +68,7 @@ export function PortForm({
       fileType: "image/png",
     },
     {
-      skip: !editingPort,
+      skip: !editingPort?.flag_s3_name,
     }
   );
 
