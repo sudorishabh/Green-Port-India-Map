@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import Provider from "@/components/Provider";
+import MapProvider from "@/components/map/MapProvider";
 
 const roboto = Poppins({
   subsets: ["latin"],
@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={`${roboto.className} antialiased`}>
-        <Provider>{children}</Provider>
+        <MapProvider>{children}</MapProvider>
       </body>
     </html>
   );

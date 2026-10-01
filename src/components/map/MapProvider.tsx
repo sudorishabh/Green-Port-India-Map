@@ -7,7 +7,7 @@ import { config } from "@fortawesome/fontawesome-svg-core";
 // FontAwesome's CSS is imported (layered) in globals.css instead of injected at runtime.
 config.autoAddCss = false;
 
-const Provider = ({ children }: { children: React.ReactNode }) => {
+const MapProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = new QueryClient();
   return (
     <QueryClientProvider client={queryClient}>
@@ -18,4 +18,4 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default Provider;
+export default MapProvider;

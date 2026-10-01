@@ -1,4 +1,4 @@
-import { Port } from "@/lib/types";
+import { Port } from "@/lib/map/types";
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 

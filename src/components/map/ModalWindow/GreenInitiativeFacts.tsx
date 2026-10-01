@@ -1,4 +1,4 @@
-import { KPIS } from "@/lib/types";
+import { KPIS } from "@/lib/map/types";
 import React, { useState } from "react";
 import Initiatives from "./Initiatives";
 import Kpis from "./Kpis";

@@ -1,7 +1,7 @@
 import React from "react";
-import { getKpiInitiatives } from "@/api";
+import { getKpiInitiatives } from "@/lib/map/api";
 import Link from "next/link";
-import { IInitiatives } from "@/lib/types";
+import { IInitiatives } from "@/lib/map/types";
 import Loader from "../Loader";
 import { useQuery } from "@tanstack/react-query";
 const Initiatives = ({ portId, kpiId }: { portId: number; kpiId: string }) => {

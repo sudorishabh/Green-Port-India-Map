@@ -1,7 +1,7 @@
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import React, { useCallback, useState, useEffect } from "react";
 import MarkerCard from "./MarkerCard";
-import { Port } from "@/lib/types";
+import { Port } from "@/lib/map/types";
 import HoveredCardPortal from "./HoveredCardPortal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLeaf } from "@fortawesome/free-solid-svg-icons";

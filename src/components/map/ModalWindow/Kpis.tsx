@@ -1,4 +1,4 @@
-import { KPIS, KpisByCategory, ITargetSection } from "@/lib/types";
+import { KPIS, KpisByCategory, ITargetSection } from "@/lib/map/types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronDown,

@@ -1,4 +1,4 @@
-import { Port } from "@/lib/types";
+import { Port } from "@/lib/map/types";
 import React from "react";
 
 const PortFacts = ({ port }: { port: Port }) => {

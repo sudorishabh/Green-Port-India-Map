@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Port, IInitiatives, KpiTargetLink, KPIS } from "@/lib/types";
+import { Port, IInitiatives, KpiTargetLink, KPIS } from "@/lib/map/types";
 
 const baseUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api`;
 

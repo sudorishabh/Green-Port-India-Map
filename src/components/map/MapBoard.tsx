@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Map, useMap } from "@vis.gl/react-google-maps";
-import Marker from "@/components/Marker/Marker";
-import { KPIS, Port } from "@/lib/types";
+import Marker from "@/components/map/Marker/Marker";
+import { KPIS, Port } from "@/lib/map/types";
 import ModalWindow from "./ModalWindow/ModalWindow";
-import { createCurvePath } from "@/lib/polylinesCurves";
-import { getPortPaths } from "@/lib/getPortPath";
+import { createCurvePath } from "@/lib/map/polylinesCurves";
+import { getPortPaths } from "@/lib/map/getPortPath";
 import Loader from "./Loader";
 
 // India center and coordinates

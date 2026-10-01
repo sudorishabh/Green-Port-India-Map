@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { KPIS, Port } from "@/lib/types";
+import { KPIS, Port } from "@/lib/map/types";
 import GreenInitiativeFacts from "./GreenInitiativeFacts";
 import PortFacts from "./PortFacts";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
