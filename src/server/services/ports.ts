@@ -11,14 +11,19 @@ export type PortInput = Omit<
   "port_id" | "created_at"
 >;
 
+/** Signed URL for a stored image, or null when the port has no file. */
+function getImageUrl(key: string) {
+  return key ? getDownloadUrl(key, "image") : null;
+}
+
 /** All ports, each with short-lived signed URLs for its image and flag. */
 export async function listPorts() {
   const ports = await db.select().from(portMaster);
   return Promise.all(
     ports.map(async (port) => ({
       ...port,
-      image_url: await getDownloadUrl(port.image_s3_name, "image"),
-      flag_url: await getDownloadUrl(port.flag_s3_name, "image"),
+      image_url: await getImageUrl(port.image_s3_name),
+      flag_url: await getImageUrl(port.flag_s3_name),
     })),
   );
 }

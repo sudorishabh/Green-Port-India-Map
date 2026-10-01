@@ -1,12 +1,13 @@
 import { Port } from "@/lib/map/types";
 import React from "react";
+import PortImage from "../PortImage";
 
 const PortFacts = ({ port }: { port: Port }) => {
   return (
     <div className='lg:w-[49%] lg:min-h-full flex flex-col sm:flex-row lg:flex-col gap[0.7rem] sm:pr-2'>
       <div className='p-1 m-2 sm:m-0 sm:w-[45%] md:w-[55%] lg:w-full lg:h-[45%]'>
-        <img
-          src={port?.image_url}
+        <PortImage
+          src={port.image_url}
           alt='Port Image Kpi'
           className='w-full h-full rounded-xl object-cover'
         />
@@ -18,11 +19,13 @@ const PortFacts = ({ port }: { port: Port }) => {
             {port.name}
           </h1>
           <div className='text-center gap-2 text-[14px] flex justify-center items-center font-medium text-gray-600'>
-            <img
-              src={port.flag_url}
-              alt='Flag Icon'
-              className='size-5 sm:size-6'
-            />
+            {port.flag_url && (
+              <img
+                src={port.flag_url}
+                alt='Flag Icon'
+                className='size-5 sm:size-6'
+              />
+            )}
             <p>{port.country}</p>
           </div>
         </div>

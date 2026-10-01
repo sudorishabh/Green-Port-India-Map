@@ -1,6 +1,7 @@
 import { Port } from "@/lib/map/types";
 import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
+import PortImage from "../PortImage";
 
 interface Props {
   port: Port | null;
@@ -73,7 +74,7 @@ const HoveredCardPortal: React.FC<Props> = React.memo(
         }}>
         {port && (
           <>
-            <img
+            <PortImage
               src={port.image_url}
               className='rounded-md w-full h-auto object-cover aspect-4/3'
               sizes='(max-width: 768px) 100vw, 230px'
@@ -84,11 +85,13 @@ const HoveredCardPortal: React.FC<Props> = React.memo(
               {port.name}
             </p>
             <div className='text-center gap-1 text-[0.8rem] flex justify-center items-center text-gray-600'>
-              <img
-                src={port?.flag_url}
-                alt='Flag Icon'
-                className='size-5 sm:size-6'
-              />
+              {port.flag_url && (
+                <img
+                  src={port.flag_url}
+                  alt='Flag Icon'
+                  className='size-5 sm:size-6'
+                />
+              )}
 
               <p>{port.country}</p>
             </div>

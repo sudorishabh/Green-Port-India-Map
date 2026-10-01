@@ -35,10 +35,12 @@ const ModalWindow = ({
               {port.name}
             </h1>
             <div className='text-center gap-2 text-[14px] flex justify-center items-center font-medium text-gray-500'>
-              <img
-                src={port?.flag_url}
-                alt='Flag Icon'
-              />
+              {port.flag_url && (
+                <img
+                  src={port.flag_url}
+                  alt='Flag Icon'
+                />
+              )}
 
               <p>{port.country}</p>
             </div>

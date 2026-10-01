@@ -6,8 +6,8 @@ export interface Port {
   city: string;
   image_s3_name: string;
   flag_s3_name: string;
-  image_url: string;
-  flag_url: string;
+  image_url: string | null;
+  flag_url: string | null;
   number_of_berths: number;
   port_type: string;
   average_tat: number;
