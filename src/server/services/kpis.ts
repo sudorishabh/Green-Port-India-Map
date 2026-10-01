@@ -28,6 +28,7 @@ export async function getKpi(kpiId: number) {
     db.select().from(portKpis).where(eq(portKpis.kpi_id, kpiId)),
     db.select().from(kpiTargetsLinks).where(eq(kpiTargetsLinks.kpi_id, kpiId)),
   ]);
+  if (!kpiData) throw kpiNotFound();
   return { kpiData, targetsLinks: groupTargetLinks(links) };
 }
 

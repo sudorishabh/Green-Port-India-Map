@@ -52,6 +52,7 @@ export async function getPort(portId: number) {
     .select()
     .from(portMaster)
     .where(eq(portMaster.port_id, portId));
+  if (!port) throw portNotFound();
   return port;
 }
 
