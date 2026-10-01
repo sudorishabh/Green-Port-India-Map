@@ -1,6 +1,7 @@
 import "server-only";
 import { DrizzleQueryError } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import type { z } from "zod";
 import { isHttpUrl } from "@/lib/urls";
 import { AppError } from "./errors";
 import { createRateLimiter, type RateLimiter } from "./rate-limit";
@@ -84,6 +85,28 @@ export async function readJson<T>(request: Request): Promise<T> {
   } catch {
     throw new AppError(400, 400, "Invalid JSON body");
   }
+}
+
+/**
+ * Parses the JSON request body with `schema`, dropping unknown fields.
+ * Invalid data is rejected with `errorCode`, a 400 and the first problem found,
+ * e.g. "lat: Too big: expected number to be <=90".
+ */
+export async function parseBody<Schema extends z.ZodType>(
+  request: Request,
+  schema: Schema,
+  errorCode: number,
+): Promise<z.output<Schema>> {
+  const result = schema.safeParse(await readJson(request));
+  if (result.success) return result.data;
+
+  const [issue] = result.error.issues;
+  const field = issue.path.join(".");
+  throw new AppError(
+    errorCode,
+    400,
+    field ? `${field}: ${issue.message}` : issue.message,
+  );
 }
 
 /** Parses a positive integer id from a route or query param, or throws `errorCode` with a 400. */
