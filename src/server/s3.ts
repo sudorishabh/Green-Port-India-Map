@@ -6,6 +6,8 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3ErrorCodes } from "@/lib/error-codes";
+import { AppError } from "./errors";
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
 
@@ -43,4 +45,12 @@ export function getUploadUrl(key: string, contentType?: string) {
 
 export async function deleteObject(key: string) {
   await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+/** Validates an object key coming from a request. */
+export function parseFileName(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new AppError(s3ErrorCodes.INVALID_FILE_NAME, 400);
+  }
+  return value;
 }
