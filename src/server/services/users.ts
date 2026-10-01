@@ -1,6 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { authErrorCodes } from "@/lib/error-codes";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwords";
 import {
   hashPassword,
   normalizeEmail,
@@ -30,7 +31,12 @@ export function parseCredentials(body: Partial<Credentials>): Credentials {
   return { email: normalizeEmail(email), password };
 }
 
+/** Creates an account. Only new passwords are length-checked, so existing users can still sign in. */
 export async function registerUser({ email, password }: Credentials) {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    throw new AppError(authErrorCodes.PASSWORD_TOO_SHORT, 400);
+  }
+
   const [created] = await db
     .insert(users)
     .values({ email, password: await hashPassword(password) })
@@ -40,6 +46,7 @@ export async function registerUser({ email, password }: Credentials) {
   if (!created) throw new AppError(authErrorCodes.USER_ALREADY_EXISTS, 400);
 }
 
+/** An unknown email and a wrong password fail identically, so logins can't be used to find accounts. */
 export async function authenticateUser({
   email,
   password,
@@ -50,11 +57,9 @@ export async function authenticateUser({
     .where(eq(users.email, email))
     .limit(1);
 
-  if (!user) throw new AppError(authErrorCodes.USER_NOT_FOUND, 401);
-
-  const isPasswordValid = await verifyPassword(password, user.password);
-  if (!isPasswordValid) {
-    throw new AppError(authErrorCodes.WRONG_PASSWORD, 401);
+  const isPasswordValid = await verifyPassword(password, user?.password);
+  if (!user || !isPasswordValid) {
+    throw new AppError(authErrorCodes.INVALID_CREDENTIALS, 401);
   }
 
   return { id: user.id, email: user.email };

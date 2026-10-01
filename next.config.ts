@@ -20,10 +20,21 @@ const apiSecurityHeaders = [
   { key: "X-XSS-Protection", value: "0" },
 ];
 
+// Stops other sites from framing the admin portal (clickjacking). The public
+// map at / stays frameable so it can still be embedded elsewhere.
+const portalSecurityHeaders = [
+  { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+  { key: "X-Frame-Options", value: "DENY" },
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/api/:path*", headers: apiSecurityHeaders }];
+    return [
+      { source: "/api/:path*", headers: apiSecurityHeaders },
+      // Also matches /portal itself.
+      { source: "/portal/:path*", headers: portalSecurityHeaders },
+    ];
   },
 };
 

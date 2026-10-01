@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRegisterMutation } from "@/lib/portal/features/auth/authApi";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwords";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -74,9 +75,16 @@ export default function AddUserForm() {
               type='password'
               autoComplete='new-password'
               required
+              minLength={MIN_PASSWORD_LENGTH}
+              aria-describedby='password-hint'
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <p
+              id='password-hint'
+              className='text-sm text-muted-foreground'>
+              At least {MIN_PASSWORD_LENGTH} characters.
+            </p>
           </div>
           <div className='space-y-2'>
             <Label htmlFor='confirm-password'>Confirm password</Label>
