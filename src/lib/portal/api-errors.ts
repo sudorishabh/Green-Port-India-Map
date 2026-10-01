@@ -12,7 +12,6 @@ export const errorMessages: Record<number, string> = {
   [authErrorCodes.FAILED_TO_REGISTER_USER]: "Failed to register user",
   [authErrorCodes.TOKEN_EXPIRED]: "Token expired",
   [authErrorCodes.TOKEN_INVALID]: "Token invalid",
-  [authErrorCodes.USER_NOT_FOUND]: "User not found",
   [authErrorCodes.NO_REFRESH_TOKEN]: "No refresh token",
   [authErrorCodes.SESSION_EXPIRED]: "Session expired",
   [authErrorCodes.INVALID_REFRESH_TOKEN]: "Invalid refresh token",
