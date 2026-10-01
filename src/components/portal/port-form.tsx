@@ -26,6 +26,17 @@ import { useUpdatePortMutation } from "@/lib/portal/features/ports/portsApiSlice
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
 
+/**
+ * A form number from an input or the API, which returns decimal columns as
+ * strings. Blank becomes undefined rather than NaN, so it is left out of the
+ * request instead of being sent as null.
+ */
+function toNumber(value: number | string | null | undefined) {
+  return value === null || value === undefined || value === ""
+    ? undefined
+    : Number(value);
+}
+
 export function PortForm({
   isOpen,
   onClose,
@@ -119,53 +130,25 @@ export function PortForm({
         name: editingPort.name || "",
         country: editingPort.country || "",
         city: editingPort.city || "",
-        number_of_berths: editingPort.number_of_berths || undefined,
+        number_of_berths: toNumber(editingPort.number_of_berths),
         port_type: editingPort.port_type || "",
-        average_tat:
-          editingPort.average_tat !== null &&
-          editingPort.average_tat !== undefined
-            ? typeof editingPort.average_tat === "string"
-              ? parseFloat(editingPort.average_tat)
-              : editingPort.average_tat
-            : undefined,
-        port_capacity: editingPort.port_capacity || undefined,
+        average_tat: toNumber(editingPort.average_tat),
+        port_capacity: toNumber(editingPort.port_capacity),
         dominant_cargo: editingPort.dominant_cargo || "",
-        lat:
-          editingPort.lat !== null && editingPort.lat !== undefined
-            ? typeof editingPort.lat === "string"
-              ? parseFloat(editingPort.lat)
-              : editingPort.lat
-            : 0,
-        lng:
-          editingPort.lng !== null && editingPort.lng !== undefined
-            ? typeof editingPort.lng === "string"
-              ? parseFloat(editingPort.lng)
-              : editingPort.lng
-            : 0,
+        lat: toNumber(editingPort.lat),
+        lng: toNumber(editingPort.lng),
         status:
           editingPort.status === "Active" || editingPort.status === "Inactive"
             ? editingPort.status
             : "Active",
         ind_port_name: editingPort.ind_port_name || "",
-        ind_port_lat:
-          editingPort.ind_port_lat !== null &&
-          editingPort.ind_port_lat !== undefined
-            ? typeof editingPort.ind_port_lat === "string"
-              ? parseFloat(editingPort.ind_port_lat)
-              : editingPort.ind_port_lat
-            : undefined,
-        ind_port_lng:
-          editingPort.ind_port_lng !== null &&
-          editingPort.ind_port_lng !== undefined
-            ? typeof editingPort.ind_port_lng === "string"
-              ? parseFloat(editingPort.ind_port_lng)
-              : editingPort.ind_port_lng
-            : undefined,
-        polyline_curve: editingPort.polyline_curve || undefined,
+        ind_port_lat: toNumber(editingPort.ind_port_lat),
+        ind_port_lng: toNumber(editingPort.ind_port_lng),
+        polyline_curve: toNumber(editingPort.polyline_curve),
         polyline_color: editingPort.polyline_color || undefined,
-        zoom: editingPort.zoom || undefined,
-        zoom_center_lat: editingPort.zoom_center_lat || undefined,
-        zoom_center_lng: editingPort.zoom_center_lng || undefined,
+        zoom: toNumber(editingPort.zoom),
+        zoom_center_lat: toNumber(editingPort.zoom_center_lat),
+        zoom_center_lng: toNumber(editingPort.zoom_center_lng),
       });
 
       // Find the Indian port if editing a non-Indian port
@@ -341,7 +324,7 @@ export function PortForm({
                       type='number'
                       step='any'
                       {...register("lat", {
-                        valueAsNumber: true,
+                        setValueAs: toNumber,
                         required: "Latitude is required",
                       })}
                       placeholder='E.g., 1.290270'
@@ -360,7 +343,7 @@ export function PortForm({
                       type='number'
                       step='any'
                       {...register("lng", {
-                        valueAsNumber: true,
+                        setValueAs: toNumber,
                         required: "Longitude is required",
                       })}
                       placeholder='E.g., 103.851959'
@@ -391,8 +374,10 @@ export function PortForm({
                     <Input
                       id='number_of_berths'
                       type='number'
+                      step='1'
+                      min='0'
                       {...register("number_of_berths", {
-                        valueAsNumber: true,
+                        setValueAs: toNumber,
                         // required: "Number of Berths is required", // Make optional
                       })}
                       placeholder='E.g., 10'
@@ -425,12 +410,13 @@ export function PortForm({
                     <Input
                       id='average_tat'
                       type='number'
-                      step='any'
+                      step='1'
+                      min='0'
                       {...register("average_tat", {
-                        valueAsNumber: true,
+                        setValueAs: toNumber,
                         // required: "Average TAT is required", // Make optional
                       })}
-                      placeholder='E.g., 2.5'
+                      placeholder='E.g., 2'
                     />
                     {errors.average_tat && (
                       <p className='text-sm text-destructive'>
@@ -441,16 +427,18 @@ export function PortForm({
 
                   <div className='space-y-2'>
                     <Label htmlFor='port_capacity'>
-                      Port Capacity (TEU/Year)
+                      Port Capacity (Million TEU/Year)
                     </Label>
                     <Input
                       id='port_capacity'
                       type='number'
+                      step='1'
+                      min='0'
                       {...register("port_capacity", {
-                        valueAsNumber: true,
+                        setValueAs: toNumber,
                         // required: "Port Capacity is required", // Make optional
                       })}
-                      placeholder='E.g., 5000000'
+                      placeholder='E.g., 8'
                     />
                     {errors.port_capacity && (
                       <p className='text-sm text-destructive'>
@@ -500,7 +488,7 @@ export function PortForm({
                         type='number'
                         step='any'
                         {...register("zoom_center_lat", {
-                          valueAsNumber: true,
+                          setValueAs: toNumber,
                           required: "Zoom Center Latitude is required",
                         })}
                         placeholder='Enter zoom center latitude'
@@ -520,7 +508,7 @@ export function PortForm({
                         type='number'
                         step='any'
                         {...register("zoom_center_lng", {
-                          valueAsNumber: true,
+                          setValueAs: toNumber,
                           required: "Zoom Center Longitude is required",
                         })}
                         placeholder='Enter zoom center longitude'
@@ -540,7 +528,7 @@ export function PortForm({
                         min='1'
                         max='20'
                         {...register("zoom", {
-                          valueAsNumber: true,
+                          setValueAs: toNumber,
                           required: "Default Zoom is required",
                         })}
                         placeholder='E.g., 5'
@@ -654,12 +642,14 @@ export function PortForm({
                       <Input
                         id='polyline_curve'
                         type='number'
-                        step='any'
+                        step='1'
+                        min='-90'
+                        max='90'
                         {...register("polyline_curve", {
-                          valueAsNumber: true,
+                          setValueAs: toNumber,
                           required: "Polyline Curve factor is required",
                         })}
-                        placeholder='E.g., 0.5 (0 to 1)'
+                        placeholder='E.g., 20 (degrees the line bows out)'
                       />
                       {errors.polyline_curve && (
                         <p className='text-sm text-destructive'>
