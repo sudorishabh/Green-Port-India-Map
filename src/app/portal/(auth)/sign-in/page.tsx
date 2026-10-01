@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
 import { portalRoutes } from "@/lib/portal/routes";
 import { toast } from "sonner";
-import Link from "next/link";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -92,13 +91,6 @@ export default function SignInPage() {
                 "Sign in"
               )}
             </button>
-          </div>
-          <div className='text-sm text-center'>
-            <Link
-              href={portalRoutes.signUp}
-              className='font-medium text-sky-600 hover:text-sky-500'>
-              Don&apos;t have an account? Register
-            </Link>
           </div>
         </form>
       </div>

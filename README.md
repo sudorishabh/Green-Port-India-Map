@@ -50,8 +50,8 @@ src/
   app/
     (map)/              Root layout + page for the public map (/)
     portal/             Root layout for the admin portal (/portal)
-      (auth)/           sign-in, sign-up
-      (dashboard)/      Protected pages: ports, kpis
+      (auth)/           sign-in
+      (dashboard)/      Protected pages: ports, kpis, users
     api/                Route Handlers: auth, port, kpi
   components/
     map/                Map UI (markers, port modal, KPI panels)
@@ -76,7 +76,8 @@ Every endpoint returns JSON. Errors look like `{ success: false, message, errorC
 
 | Method | Path                                            |    |
 | ------ | ----------------------------------------------- | -- |
-| POST   | `/api/auth/register`, `/api/auth/login`         |    |
+| POST   | `/api/auth/login`                               |    |
+| POST   | `/api/auth/register`                            | 🔒 |
 | GET    | `/api/auth/refresh`, `/api/auth/logout`         |    |
 | GET    | `/api/port/all-ports`, `/api/port/single-port/:id` |    |
 | POST   | `/api/port/create-port`, `/api/port/update-port/:id` | 🔒 |
