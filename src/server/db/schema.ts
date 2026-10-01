@@ -36,7 +36,7 @@ export const portMaster = pgTable("port_master", {
     .default(""),
   lat: decimal("lat", { precision: 6, scale: 3 }).notNull().default("0.000"),
   lng: decimal("lng", { precision: 6, scale: 3 }).notNull().default("0.000"),
-  status: varchar("status", { length: 10 }).notNull().default("active"),
+  status: varchar("status", { length: 10 }).notNull().default("Active"),
   ind_port_name: varchar("ind_port_name", { length: 100 }).default(""),
   ind_port_lat: decimal("ind_port_lat", { precision: 6, scale: 3 }).default(
     "0.000"
