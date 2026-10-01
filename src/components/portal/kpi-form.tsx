@@ -75,7 +75,10 @@ export function KpiForm({
     name: "kpi_target_links",
   });
 
+  // Start from the saved KPI, or a blank form, every time the dialog opens, so
+  // a cancelled Add doesn't leave its values behind for the next one.
   useEffect(() => {
+    if (!isOpen) return;
     if (!isKpi) {
       reset(EMPTY_FORM);
       return;
@@ -92,7 +95,7 @@ export function KpiForm({
         ...targetsLinks.international,
       ].map(({ target_type, link_url }) => ({ target_type, link_url })),
     });
-  }, [isKpi, reset]);
+  }, [isOpen, isKpi, reset]);
 
   const handleFormSubmitInternal = handleSubmit((data) => {
     onSubmit(data);
