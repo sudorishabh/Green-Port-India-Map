@@ -43,6 +43,13 @@
       "when": 1790865157165,
       "tag": "0005_unique_port_name",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790865259405,
+      "tag": "0006_decimal_port_capacity",
+      "breakpoints": true
     }
   ]
 }

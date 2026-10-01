@@ -18,19 +18,25 @@ const requiredText = (maxLength: number) =>
 const count = z.int().min(0).max(MAX_INTEGER);
 
 /**
- * A decimal(6,3) coordinate. The API returns decimals as strings (e.g.
- * "19.076"), so numeric strings are accepted as well as numbers. Parses to a
- * string, which is how Drizzle writes decimal columns.
+ * A decimal column. The API returns decimals as strings (e.g. "19.076"), so
+ * numeric strings are accepted as well as numbers. Parses to a string, which
+ * is how Drizzle writes decimal columns.
  */
-const coordinate = (limit: number) =>
+const decimal = (number: z.ZodNumber) =>
   z.preprocess(
     (value) =>
       typeof value === "string" && value.trim() !== "" ? Number(value) : value,
-    z.number().min(-limit).max(limit).transform(String),
+    number.transform(String),
   );
 
-const latitude = () => coordinate(90);
-const longitude = () => coordinate(180);
+const latitude = () => decimal(z.number().min(-90).max(90));
+const longitude = () => decimal(z.number().min(-180).max(180));
+
+/**
+ * Largest port capacity accepted, in million TEU a year. The busiest port
+ * handles about 50; a larger value was almost certainly entered in TEU.
+ */
+export const MAX_PORT_CAPACITY = 1000;
 
 export const portSchema = z.object({
   port_location_type: z.enum(PORT_LOCATION_TYPES).optional(),
@@ -44,7 +50,12 @@ export const portSchema = z.object({
   port_type: text(100).optional(),
   /** Average turnaround time, in whole days. */
   average_tat: count.optional(),
-  port_capacity: count.optional(),
+  port_capacity: decimal(
+    z
+      .number()
+      .min(0)
+      .max(MAX_PORT_CAPACITY, "Enter the capacity in million TEU, e.g. 8.5"),
+  ).optional(),
   dominant_cargo: text(200).optional(),
   /** The Indian hub a partner port connects to; empty for hubs. */
   ind_port_name: text(100).nullable().optional(),

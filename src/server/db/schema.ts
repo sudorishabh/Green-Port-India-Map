@@ -31,7 +31,10 @@ export const portMaster = pgTable("port_master", {
   number_of_berths: integer("number_of_berths").notNull().default(0),
   port_type: varchar("port_type", { length: 100 }).notNull().default(""),
   average_tat: integer("average_tat").notNull().default(0),
-  port_capacity: integer("port_capacity").notNull().default(0),
+  /** Annual container throughput in million TEU. */
+  port_capacity: decimal("port_capacity", { precision: 12, scale: 2 })
+    .notNull()
+    .default("0"),
   dominant_cargo: varchar("dominant_cargo", { length: 200 })
     .notNull()
     .default(""),

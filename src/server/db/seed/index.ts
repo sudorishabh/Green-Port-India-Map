@@ -36,7 +36,13 @@ type PortRow = typeof portMaster.$inferInsert;
 
 const coord = (value: number) => value.toFixed(3);
 
-function hubRow({ lat, lng, zoom_center, ...port }: HubPort): PortRow {
+function hubRow({
+  lat,
+  lng,
+  zoom_center,
+  port_capacity,
+  ...port
+}: HubPort): PortRow {
   return {
     ...port,
     port_location_type: "Indian",
@@ -44,6 +50,7 @@ function hubRow({ lat, lng, zoom_center, ...port }: HubPort): PortRow {
     status: "Active",
     lat: coord(lat),
     lng: coord(lng),
+    port_capacity: String(port_capacity),
     // Ports without an Indian port name are drawn as hubs on the map.
     ind_port_name: "",
     zoom_center_lat: coord(zoom_center.lat),
@@ -51,7 +58,13 @@ function hubRow({ lat, lng, zoom_center, ...port }: HubPort): PortRow {
   };
 }
 
-function partnerRow({ lat, lng, hub, ...port }: PartnerPort): PortRow {
+function partnerRow({
+  lat,
+  lng,
+  hub,
+  port_capacity,
+  ...port
+}: PartnerPort): PortRow {
   const hubPort = hubPorts.find(({ name }) => name === hub)!;
   return {
     ...port,
@@ -59,6 +72,7 @@ function partnerRow({ lat, lng, hub, ...port }: PartnerPort): PortRow {
     status: "Active",
     lat: coord(lat),
     lng: coord(lng),
+    port_capacity: String(port_capacity),
     ind_port_name: hubPort.name,
     ind_port_lat: coord(hubPort.lat),
     ind_port_lng: coord(hubPort.lng),

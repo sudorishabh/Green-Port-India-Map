@@ -31,7 +31,7 @@ import { useAddPortMutation } from "@/lib/portal/features/ports/portsApiSlice";
 import { useUpdatePortMutation } from "@/lib/portal/features/ports/portsApiSlice";
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
-import { HEX_COLOR } from "@/lib/schemas/port";
+import { HEX_COLOR, MAX_PORT_CAPACITY } from "@/lib/schemas/port";
 
 /**
  * A form number from an input or the API, which returns decimal columns as
@@ -422,13 +422,17 @@ export function PortForm({
                     <Input
                       id='port_capacity'
                       type='number'
-                      step='1'
+                      step='0.01'
                       min='0'
                       {...register("port_capacity", {
                         setValueAs: toNumber,
+                        max: {
+                          value: MAX_PORT_CAPACITY,
+                          message: "Enter the capacity in million TEU, e.g. 8.5",
+                        },
                         // required: "Port Capacity is required", // Make optional
                       })}
-                      placeholder='E.g., 8'
+                      placeholder='E.g., 8.5'
                     />
                     {errors.port_capacity && (
                       <p className='text-sm text-destructive'>
