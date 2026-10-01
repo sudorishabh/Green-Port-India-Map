@@ -5,6 +5,7 @@ import { KPIS, Port } from "@/lib/map/types";
 import ModalWindow from "./ModalWindow/ModalWindow";
 import { createCurvePath } from "@/lib/map/polylinesCurves";
 import { getPortPaths } from "@/lib/map/getPortPath";
+import { findHub } from "@/lib/map/ports";
 import Loader from "./Loader";
 
 // India center and coordinates
@@ -113,6 +114,7 @@ const MapBoard = ({
       {detailsPort ? (
         <ModalWindow
           port={detailsPort}
+          hub={findHub(detailsPort, ports)}
           kpis={kpis}
           onClose={() => setDetailsPort(null)}
         />

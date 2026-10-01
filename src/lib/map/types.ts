@@ -9,7 +9,8 @@ export interface Port {
   number_of_berths: number;
   port_type: string;
   average_tat: number;
-  port_capacity: number;
+  /** Million TEU a year. A decimal column, so the API sends a string such as "8.50". */
+  port_capacity: string;
   dominant_cargo: string;
   lat: number;
   lng: number;

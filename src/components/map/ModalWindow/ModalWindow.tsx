@@ -8,6 +8,8 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 interface Props {
   port: Port;
+  /** The hub `port` trades with, or `port` itself when it is a hub. */
+  hub: Port | undefined;
   kpis: KPIS[];
   onClose: () => void;
 }
@@ -17,7 +19,7 @@ interface Props {
  * keeps keyboard focus inside while open and labels it for screen readers.
  * Mount it only while a port is selected.
  */
-const ModalWindow = ({ port, kpis, onClose }: Props) => {
+const ModalWindow = ({ port, hub, kpis, onClose }: Props) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   return (
@@ -56,7 +58,10 @@ const ModalWindow = ({ port, kpis, onClose }: Props) => {
           </header>
 
           <div className='flex flex-1 flex-col gap-4 overflow-y-auto p-3 sm:p-4 lg:flex-row lg:overflow-hidden'>
-            {!isFullScreen ? <PortFacts port={port} /> : null}
+            {!isFullScreen ? <PortFacts
+                port={port}
+                hub={hub}
+              /> : null}
             <GreenInitiativeFacts
               setIsFullScreen={setIsFullScreen}
               isFullScreen={isFullScreen}
