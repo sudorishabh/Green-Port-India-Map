@@ -79,9 +79,9 @@ Every endpoint returns JSON. Errors look like `{ success: false, message, errorC
 
 | Method | Path                                            |    |
 | ------ | ----------------------------------------------- | -- |
-| POST   | `/api/auth/login`                               |    |
+| POST   | `/api/auth/login`, `/api/auth/logout`           |    |
 | POST   | `/api/auth/register`                            | 🔒 |
-| GET    | `/api/auth/refresh`, `/api/auth/logout`         |    |
+| GET    | `/api/auth/refresh`                             |    |
 | GET    | `/api/port/all-ports`, `/api/port/single-port/:id` |    |
 | POST   | `/api/port/create-port`, `/api/port/update-port/:id` | 🔒 |
 | DELETE | `/api/port/delete-port/:id`                     | 🔒 |
