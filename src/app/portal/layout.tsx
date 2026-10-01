@@ -22,7 +22,10 @@ export default function PortalRootLayout({
 }>) {
   return (
     <html lang='en'>
+      {/* Browser extensions (e.g. ColorZilla) add attributes to <body> before
+          React hydrates; this ignores those, and only on <body> itself. */}
       <body
+        suppressHydrationWarning
         className={cn(
           inter.variable,
           "min-h-screen bg-background font-sans antialiased"

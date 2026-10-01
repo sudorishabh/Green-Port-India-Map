@@ -3,7 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import MapProvider from "@/components/map/MapProvider";
 
-const roboto = Poppins({
+const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
@@ -20,7 +20,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body className={`${roboto.className} antialiased`}>
+      {/* Browser extensions (e.g. ColorZilla) add attributes to <body> before
+          React hydrates; this ignores those, and only on <body> itself. */}
+      <body
+        className={`${poppins.className} antialiased`}
+        suppressHydrationWarning>
         <MapProvider>{children}</MapProvider>
       </body>
     </html>
