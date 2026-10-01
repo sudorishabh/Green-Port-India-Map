@@ -79,10 +79,16 @@ function toErrorResponse(error: unknown): Response {
   );
 }
 
+/**
+ * The last `X-Forwarded-For` entry: the address the proxy in front of the app
+ * saw (Vercel and `next start` set the header when it is missing). Earlier
+ * entries are sent by the client, so trusting them would let it dodge the rate
+ * limit. Same as Express's `trust proxy: 1` in the old API.
+ */
 function getClientIp(request: NextRequest): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   return (
-    forwardedFor?.split(",")[0]?.trim() ||
+    forwardedFor?.split(",").at(-1)?.trim() ||
     request.headers.get("x-real-ip") ||
     "unknown"
   );
