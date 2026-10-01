@@ -19,6 +19,7 @@ import {
 } from "@/lib/portal/features/kpis/kpisApiSlice";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
 import { Initiative } from "@/lib/portal/types";
+import { isHttpUrl } from "@/lib/urls";
 
 const InitiativeForm = ({
   selectedPortId,
@@ -99,15 +100,6 @@ const InitiativeForm = ({
     }
   };
 
-  const isValidUrl = (urlString: string) => {
-    try {
-      new URL(urlString);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
   const handleSubmitInitiative = async () => {
     if (!selectedKpiId || !selectedPortId) {
       toast.error("KPI ID or Port ID is missing.");
@@ -117,7 +109,7 @@ const InitiativeForm = ({
       toast.error("Initiative name cannot be empty.");
       return;
     }
-    if (!isValidUrl(initiativeUrl)) {
+    if (!isHttpUrl(initiativeUrl)) {
       toast.error(
         "Please enter a valid source URL (e.g., http://example.com)."
       );

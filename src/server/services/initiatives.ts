@@ -1,7 +1,9 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
+import { kpiErrorCodes } from "@/lib/error-codes";
 import { db } from "@/server/db";
 import { portGreenInitiatives } from "@/server/db/schema";
+import { parseHttpUrl } from "@/server/http";
 
 export type InitiativeInput = Pick<
   typeof portGreenInitiatives.$inferInsert,
@@ -26,9 +28,12 @@ export async function addInitiative(
   portId: number,
   { initiative, initiative_url }: InitiativeInput,
 ) {
-  await db
-    .insert(portGreenInitiatives)
-    .values({ initiative, initiative_url, kpi_id: kpiId, port_id: portId });
+  await db.insert(portGreenInitiatives).values({
+    initiative,
+    initiative_url: parseHttpUrl(initiative_url, kpiErrorCodes.INVALID_URL),
+    kpi_id: kpiId,
+    port_id: portId,
+  });
 }
 
 export async function updateInitiative(
@@ -37,7 +42,10 @@ export async function updateInitiative(
 ) {
   await db
     .update(portGreenInitiatives)
-    .set({ initiative, initiative_url })
+    .set({
+      initiative,
+      initiative_url: parseHttpUrl(initiative_url, kpiErrorCodes.INVALID_URL),
+    })
     .where(eq(portGreenInitiatives.initiative_id, initiativeId));
 }
 

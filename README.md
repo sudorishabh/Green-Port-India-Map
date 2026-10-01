@@ -16,6 +16,8 @@ cp .env.example .env   # then fill in the values
 npm run dev            # http://localhost:3000
 ```
 
+There is no public sign-up. Create the first portal account with `npm run db:create-user -- you@example.com`; signed-in users can then add more from the portal's Users page.
+
 ## Scripts
 
 | Script                | Description                                        |
@@ -29,6 +31,7 @@ npm run dev            # http://localhost:3000
 | `npm run db:migrate`  | Apply pending migrations                           |
 | `npm run db:studio`   | Open Drizzle Studio                                |
 | `npm run db:seed`     | Seed ports, KPIs and green initiatives (re-runnable) |
+| `npm run db:create-user -- <email>` | Create a portal account and print its generated password |
 
 ## Environment variables
 
@@ -50,8 +53,8 @@ src/
   app/
     (map)/              Root layout + page for the public map (/)
     portal/             Root layout for the admin portal (/portal)
-      (auth)/           sign-in, sign-up
-      (dashboard)/      Protected pages: ports, kpis
+      (auth)/           sign-in
+      (dashboard)/      Protected pages: ports, kpis, users
     api/                Route Handlers: auth, port, kpi
   components/
     map/                Map UI (markers, port modal, KPI panels)
@@ -76,7 +79,8 @@ Every endpoint returns JSON. Errors look like `{ success: false, message, errorC
 
 | Method | Path                                            |    |
 | ------ | ----------------------------------------------- | -- |
-| POST   | `/api/auth/register`, `/api/auth/login`         |    |
+| POST   | `/api/auth/login`                               |    |
+| POST   | `/api/auth/register`                            | 🔒 |
 | GET    | `/api/auth/refresh`, `/api/auth/logout`         |    |
 | GET    | `/api/port/all-ports`, `/api/port/single-port/:id` |    |
 | POST   | `/api/port/create-port`, `/api/port/update-port/:id` | 🔒 |
@@ -88,4 +92,4 @@ Every endpoint returns JSON. Errors look like `{ success: false, message, errorC
 | POST   | `/api/kpi/initiatives/:kpiId/:portId`, `/api/kpi/update-initiative/:id` | 🔒 |
 | DELETE | `/api/kpi/delete-initiative/:id`                | 🔒 |
 
-API responses carry helmet-equivalent security headers (`next.config.ts`) and are rate limited to 250 requests per 10 minutes per IP (in memory, per server instance).
+API responses carry helmet-equivalent security headers (`next.config.ts`) and are rate limited to 250 requests per 10 minutes per IP, or 10 per 15 minutes for `/api/auth/login` (in memory, per server instance).

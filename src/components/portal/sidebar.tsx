@@ -7,6 +7,7 @@ import { portalRoutes } from "@/lib/portal/routes";
 const navItems = [
   { href: portalRoutes.ports, label: "Ports" },
   { href: portalRoutes.kpis, label: "KPIs" },
+  { href: portalRoutes.users, label: "Users" },
 ];
 
 const Sidebar = () => {

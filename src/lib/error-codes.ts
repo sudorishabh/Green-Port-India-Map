@@ -29,4 +29,6 @@ export const kpiErrorCodes = {
   KPI_FAILED_TO_CREATE: 3005,
   KPI_FAILED_TO_UPDATE: 3006,
   INVALID_INITIATIVE_ID: 3007,
+  /** A target or initiative link that isn't an http(s) URL. */
+  INVALID_URL: 3008,
 } as const;

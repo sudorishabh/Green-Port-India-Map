@@ -1,14 +1,25 @@
 import "server-only";
 import type { NextRequest } from "next/server";
+import { isHttpUrl } from "@/lib/urls";
 import { AppError } from "./errors";
-import { rateLimit } from "./rate-limit";
+import { createRateLimiter, type RateLimiter } from "./rate-limit";
 
 type RouteHandler<Context> = (
   request: NextRequest,
   context: Context,
 ) => Promise<Response>;
 
+interface ApiRouteOptions {
+  /** Replaces the default limit of 250 requests per 10 minutes per IP. */
+  rateLimiter?: RateLimiter;
+}
+
 const isProduction = process.env.NODE_ENV === "production";
+
+const defaultRateLimiter = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  maxRequests: 250,
+});
 
 /**
  * Wraps a Route Handler with the API's cross-cutting concerns: per-IP rate
@@ -16,16 +27,14 @@ const isProduction = process.env.NODE_ENV === "production";
  */
 export function apiRoute<Context>(
   handler: RouteHandler<Context>,
+  { rateLimiter = defaultRateLimiter }: ApiRouteOptions = {},
 ): RouteHandler<Context> {
   return async (request, context) => {
-    const { allowed, retryAfterSeconds } = rateLimit(getClientIp(request));
+    const { allowed, retryAfterSeconds } = rateLimiter(getClientIp(request));
     if (!allowed) {
+      // Limits differ per route, so the wait time goes in Retry-After.
       const response = toErrorResponse(
-        new AppError(
-          429,
-          429,
-          "Too many requests from this IP, please try again after 10 minutes",
-        ),
+        new AppError(429, 429, "Too many requests, please try again later"),
       );
       response.headers.set("Retry-After", String(retryAfterSeconds));
       return response;
@@ -60,6 +69,12 @@ export function parseId(
   return id;
 }
 
+/** Returns `value` if it is an http(s) URL, or throws `errorCode` with a 400. */
+export function parseHttpUrl(value: unknown, errorCode: number): string {
+  if (!isHttpUrl(value)) throw new AppError(errorCode, 400);
+  return value;
+}
+
 function toErrorResponse(error: unknown): Response {
   const appError =
     error instanceof AppError
@@ -79,10 +94,16 @@ function toErrorResponse(error: unknown): Response {
   );
 }
 
+/**
+ * The last `X-Forwarded-For` entry: the address the proxy in front of the app
+ * saw (Vercel and `next start` set the header when it is missing). Earlier
+ * entries are sent by the client, so trusting them would let it dodge the rate
+ * limit. Same as Express's `trust proxy: 1` in the old API.
+ */
 function getClientIp(request: NextRequest): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   return (
-    forwardedFor?.split(",")[0]?.trim() ||
+    forwardedFor?.split(",").at(-1)?.trim() ||
     request.headers.get("x-real-ip") ||
     "unknown"
   );

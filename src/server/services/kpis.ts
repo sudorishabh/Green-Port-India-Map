@@ -4,6 +4,7 @@ import { kpiErrorCodes } from "@/lib/error-codes";
 import { db } from "@/server/db";
 import { kpiTargetsLinks, portKpis } from "@/server/db/schema";
 import { AppError } from "@/server/errors";
+import { parseHttpUrl } from "@/server/http";
 
 type TargetLink = typeof kpiTargetsLinks.$inferSelect;
 
@@ -98,9 +99,10 @@ function pickKpiFields({
   return { kpi_category, kpi, kpi_international_target, kpi_national_target };
 }
 
+/** Called inside the KPI's transaction, so an invalid URL rolls back the whole write. */
 function toLinkRows(kpiId: number, links: KpiInput["kpi_target_links"] = []) {
   return links.map(({ link_url, target_type }) => ({
-    link_url,
+    link_url: parseHttpUrl(link_url, kpiErrorCodes.INVALID_URL),
     target_type,
     kpi_id: kpiId,
   }));
