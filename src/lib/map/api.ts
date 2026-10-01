@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Port, IInitiatives, KpiTargetLink, KPIS } from "@/lib/map/types";
+import { Port, IInitiatives, KPIS } from "@/lib/map/types";
 
 const baseUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api`;
 
@@ -14,16 +14,6 @@ export async function getPorts(): Promise<Port[]> {
   }
 }
 
-export async function getPort(id: number): Promise<Port> {
-  try {
-    const response = await axios.get(`${baseUrl}/port/single-port/${id}`);
-    return response.data.data;
-  } catch (error) {
-    console.error(`Error fetching port with id ${id}:`, error);
-    throw error;
-  }
-}
-
 // KPI API methods
 export async function getKpis(): Promise<KPIS[]> {
   try {
@@ -31,16 +21,6 @@ export async function getKpis(): Promise<KPIS[]> {
     return response.data.data;
   } catch (error) {
     console.error("Error fetching KPIs:", error);
-    throw error;
-  }
-}
-
-export async function getKpi(id: number): Promise<KPIS> {
-  try {
-    const response = await axios.get(`${baseUrl}/kpi/single-kpi/${id}`);
-    return response.data.data;
-  } catch (error) {
-    console.error(`Error fetching KPI with id ${id}:`, error);
     throw error;
   }
 }
@@ -59,59 +39,6 @@ export async function getKpiInitiatives({
     return response.data.data;
   } catch (error) {
     console.error("Error fetching kpi-initiatives:", error);
-    throw error;
-  }
-}
-
-export async function getAllInitiatives(): Promise<IInitiatives[]> {
-  try {
-    const response = await axios.get(`${baseUrl}/initiative/all`);
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching all initiatives:", error);
-    throw error;
-  }
-}
-
-export async function getInitiative(id: number): Promise<IInitiatives> {
-  try {
-    const response = await axios.get(`${baseUrl}/initiative/${id}`);
-    return response.data.data;
-  } catch (error) {
-    console.error(`Error fetching initiative with id ${id}:`, error);
-    throw error;
-  }
-}
-
-// KPI Target Links API methods
-export async function getAllTargetLinks(): Promise<KpiTargetLink[]> {
-  try {
-    const response = await axios.get(`${baseUrl}/target-link/all`);
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching all target links:", error);
-    throw error;
-  }
-}
-
-export async function getTargetLink(id: number): Promise<KpiTargetLink> {
-  try {
-    const response = await axios.get(`${baseUrl}/target-link/${id}`);
-    return response.data.data;
-  } catch (error) {
-    console.error(`Error fetching target link with id ${id}:`, error);
-    throw error;
-  }
-}
-
-export async function getS3File(fileName: string, fileType: string) {
-  try {
-    const response = await axios.get(
-      `${baseUrl}/s3/file-url?fileName=${fileName}&fileType=${fileType}`
-    );
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching S3 file:", error);
     throw error;
   }
 }

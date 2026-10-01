@@ -63,26 +63,6 @@ export interface IInitiatives {
   port_id: number;
 }
 
-export interface TargetLinks {
-  kpi_id: number;
-  targets: {
-    international: {
-      link_id: number;
-      target_type: string;
-      link_url: string;
-      created_at: string;
-      kpi_id: number;
-    }[];
-    nation: {
-      link_id: number;
-      target_type: string;
-      link_url: string;
-      created_at: string;
-      kpi_id: number;
-    }[];
-  };
-}
-
 export interface KpisByCategory {
   [category: string]: Array<{
     kpi_id: number;
@@ -118,16 +98,4 @@ export interface ITargetSection {
         kpi_id: number;
       }[]
     | undefined;
-}
-
-export interface S3File {
-  url: string;
-}
-
-export interface KpiTargetLink {
-  link_id: number;
-  target_type: "national" | "international";
-  link_url: string;
-  created_at: string;
-  kpi_id: number;
 }
