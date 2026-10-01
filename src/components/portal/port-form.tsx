@@ -43,7 +43,7 @@ export function PortForm({
   const isLoading = isAddingPort || isUpdatingPort;
 
   const defaultValues = {
-    portLocationType: portType || "",
+    port_location_type: portType || "",
     name: "",
     country: portType === "Indian" ? "India" : "",
     city: "",
@@ -77,7 +77,7 @@ export function PortForm({
     defaultValues,
   });
 
-  const watchedPortLocationType = watch("portLocationType");
+  const watchedPortLocationType = watch("port_location_type");
   const watchedIndianPortName = watch("ind_port_name");
   const watchedLat = watch("ind_port_lat");
   const watchedLng = watch("ind_port_lng");
@@ -96,10 +96,10 @@ export function PortForm({
     }
   }, [watchedIndianPortName, indianPorts, portType]);
 
-  // Set portLocationType and country based on portType prop
+  // Set port_location_type and country based on portType prop
   useEffect(() => {
     if (portType) {
-      setValue("portLocationType", portType);
+      setValue("port_location_type", portType);
       if (portType === "Indian") {
         setValue("country", "India");
       }
@@ -109,13 +109,13 @@ export function PortForm({
   // Handle editingPort when editing
   useEffect(() => {
     if (editingPort) {
-      // Determine initial portLocationType based on country
+      // Determine initial port_location_type based on country
       const initialPortLocationType =
         editingPort.country?.toLowerCase() === "india" ? "Indian" : "Other";
 
       // First reset the form with the basic data
       reset({
-        portLocationType: initialPortLocationType,
+        port_location_type: initialPortLocationType,
         name: editingPort.name || "",
         country: editingPort.country || "",
         city: editingPort.city || "",
@@ -180,7 +180,7 @@ export function PortForm({
     } else {
       reset({
         ...defaultValues,
-        portLocationType: portType || "",
+        port_location_type: portType || "",
         country: portType === "Indian" ? "India" : "",
       });
     }
