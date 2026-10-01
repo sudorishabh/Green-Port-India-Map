@@ -1,6 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
+import React, { useEffect } from "react";
+import {
+  Controller,
+  ControllerRenderProps,
+  DefaultValues,
+  useForm,
+  useWatch,
+} from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -49,6 +55,65 @@ function coordinateRules(label: string, limit: number) {
   };
 }
 
+/** The form's values for the port being edited, or a blank `portType` port. */
+function toFormValues(
+  port: Port | null | undefined,
+  portType: PortFormProps["portType"]
+): DefaultValues<Port> {
+  if (!port) {
+    return {
+      port_location_type: portType || "",
+      name: "",
+      country: portType === "Indian" ? "India" : "",
+      city: "",
+      number_of_berths: undefined,
+      port_type: "",
+      average_tat: undefined,
+      port_capacity: undefined,
+      dominant_cargo: "",
+      lat: undefined,
+      lng: undefined,
+      status: "Active",
+      ind_port_name: "",
+      ind_port_lat: undefined,
+      ind_port_lng: undefined,
+      polyline_curve: undefined,
+      polyline_color: undefined,
+      zoom: undefined,
+      zoom_center_lat: undefined,
+      zoom_center_lng: undefined,
+    };
+  }
+
+  return {
+    // Go by country, as the ports page does: older rows saved the wrong type.
+    port_location_type:
+      port.country?.toLowerCase() === "india" ? "Indian" : "Other",
+    name: port.name || "",
+    country: port.country || "",
+    city: port.city || "",
+    number_of_berths: toNumber(port.number_of_berths),
+    port_type: port.port_type || "",
+    average_tat: toNumber(port.average_tat),
+    port_capacity: toNumber(port.port_capacity),
+    dominant_cargo: port.dominant_cargo || "",
+    lat: toNumber(port.lat),
+    lng: toNumber(port.lng),
+    status:
+      port.status === "Active" || port.status === "Inactive"
+        ? port.status
+        : "Active",
+    ind_port_name: port.ind_port_name || "",
+    ind_port_lat: toNumber(port.ind_port_lat),
+    ind_port_lng: toNumber(port.ind_port_lng),
+    polyline_curve: toNumber(port.polyline_curve),
+    polyline_color: port.polyline_color || undefined,
+    zoom: toNumber(port.zoom),
+    zoom_center_lat: toNumber(port.zoom_center_lat),
+    zoom_center_lng: toNumber(port.zoom_center_lng),
+  };
+}
+
 export function PortForm({
   isOpen,
   onClose,
@@ -56,130 +121,37 @@ export function PortForm({
   indianPorts = [],
   editingPort,
 }: PortFormProps) {
-  const [selectedIndianPort, setSelectedIndianPort] = useState<Port | null>(
-    null
-  );
-
   const [addPort, { isLoading: isAddingPort }] = useAddPortMutation();
   const [updatePort, { isLoading: isUpdatingPort }] = useUpdatePortMutation();
 
   const isLoading = isAddingPort || isUpdatingPort;
 
-  const defaultValues = {
-    port_location_type: portType || "",
-    name: "",
-    country: portType === "Indian" ? "India" : "",
-    city: "",
-    number_of_berths: undefined,
-    port_type: "",
-    average_tat: undefined,
-    port_capacity: undefined,
-    dominant_cargo: "",
-    lat: undefined,
-    lng: undefined,
-    status: "Active",
-    ind_port_name: "",
-    ind_port_lat: undefined,
-    ind_port_lng: undefined,
-    polyline_curve: undefined,
-    polyline_color: undefined,
-    zoom: undefined,
-    zoom_center_lat: undefined,
-    zoom_center_lng: undefined,
-  };
-
   const {
     handleSubmit,
     register,
     setValue,
-    watch,
     reset,
     control,
     formState: { errors },
   } = useForm<Port>({
-    defaultValues,
+    defaultValues: toFormValues(editingPort, portType),
   });
 
-  const watchedPortLocationType = watch("port_location_type");
-  const watchedIndianPortName = watch("ind_port_name");
-  const watchedLat = watch("ind_port_lat");
-  const watchedLng = watch("ind_port_lng");
+  const [watchedPortLocationType, watchedIndianPortName, watchedPolylineColor] =
+    useWatch({
+      control,
+      name: ["port_location_type", "ind_port_name", "polyline_color"],
+    });
 
-  // Update fields when an Indian port is selected in the dropdown
+  const selectedIndianPort = indianPorts.find(
+    (port) => port.name === watchedIndianPortName
+  );
+
+  // Start from the saved port, or a blank form, every time the dialog opens.
+  // Refetches of the port list while it is open must not wipe the user's edits.
   useEffect(() => {
-    if (watchedIndianPortName && portType === "Other") {
-      const selectedPort = indianPorts.find(
-        (p) => p.name === watchedIndianPortName
-      );
-      if (selectedPort) {
-        setSelectedIndianPort(selectedPort);
-        setValue("ind_port_lat", selectedPort.lat);
-        setValue("ind_port_lng", selectedPort.lng);
-      }
-    }
-  }, [watchedIndianPortName, indianPorts, portType]);
-
-  // Set port_location_type and country based on portType prop
-  useEffect(() => {
-    if (portType) {
-      setValue("port_location_type", portType);
-      if (portType === "Indian") {
-        setValue("country", "India");
-      }
-    }
-  }, [portType]);
-
-  // Handle editingPort when editing
-  useEffect(() => {
-    if (editingPort) {
-      // Determine initial port_location_type based on country
-      const initialPortLocationType =
-        editingPort.country?.toLowerCase() === "india" ? "Indian" : "Other";
-
-      // First reset the form with the basic data
-      reset({
-        port_location_type: initialPortLocationType,
-        name: editingPort.name || "",
-        country: editingPort.country || "",
-        city: editingPort.city || "",
-        number_of_berths: toNumber(editingPort.number_of_berths),
-        port_type: editingPort.port_type || "",
-        average_tat: toNumber(editingPort.average_tat),
-        port_capacity: toNumber(editingPort.port_capacity),
-        dominant_cargo: editingPort.dominant_cargo || "",
-        lat: toNumber(editingPort.lat),
-        lng: toNumber(editingPort.lng),
-        status:
-          editingPort.status === "Active" || editingPort.status === "Inactive"
-            ? editingPort.status
-            : "Active",
-        ind_port_name: editingPort.ind_port_name || "",
-        ind_port_lat: toNumber(editingPort.ind_port_lat),
-        ind_port_lng: toNumber(editingPort.ind_port_lng),
-        polyline_curve: toNumber(editingPort.polyline_curve),
-        polyline_color: editingPort.polyline_color || undefined,
-        zoom: toNumber(editingPort.zoom),
-        zoom_center_lat: toNumber(editingPort.zoom_center_lat),
-        zoom_center_lng: toNumber(editingPort.zoom_center_lng),
-      });
-
-      // Find the Indian port if editing a non-Indian port
-      if (initialPortLocationType === "Other" && editingPort.ind_port_name) {
-        const foundPort = indianPorts.find(
-          (p) => p.name === editingPort.ind_port_name
-        );
-        if (foundPort) {
-          setSelectedIndianPort(foundPort);
-        }
-      }
-    } else {
-      reset({
-        ...defaultValues,
-        port_location_type: portType || "",
-        country: portType === "Indian" ? "India" : "",
-      });
-    }
-  }, [editingPort, portType, indianPorts]);
+    if (isOpen) reset(toFormValues(editingPort, portType));
+  }, [isOpen, editingPort, portType, reset]);
 
   const getDialogTitle = () => {
     if (editingPort) {
@@ -192,8 +164,16 @@ export function PortForm({
     } Port`;
   };
 
-  const handleFormSubmit = async (data: Port) => {
+  const handleFormSubmit = async (formData: Port) => {
     const editingPortId = editingPort?.port_id;
+    // Partner ports keep a copy of their Indian port's coordinates; save its current ones.
+    const data = selectedIndianPort
+      ? {
+          ...formData,
+          ind_port_lat: toNumber(selectedIndianPort.lat),
+          ind_port_lng: toNumber(selectedIndianPort.lng),
+        }
+      : formData;
 
     try {
       if (editingPort && editingPortId) {
@@ -569,14 +549,17 @@ export function PortForm({
                         />
                         <Input
                           type='color'
+                          aria-label='Pick connection line color'
                           onChange={(e) =>
-                            setValue("polyline_color", e.target.value)
+                            setValue("polyline_color", e.target.value, {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            })
                           }
-                          value={watch("polyline_color") || "#007aff"} // Default color
+                          value={watchedPolylineColor || "#007aff"} // Default color
                           className='h-10 w-12 p-0 border-none rounded-md cursor-pointer appearance-none bg-transparent'
                           style={{
-                            backgroundColor:
-                              watch("polyline_color") || "#007aff",
+                            backgroundColor: watchedPolylineColor || "#007aff",
                           }} // Show selected color
                         />
                       </div>
@@ -682,11 +665,11 @@ export function PortForm({
                       <div className='grid grid-cols-2 gap-2 mt-1 text-sm'>
                         <p>
                           <span className='text-muted-foreground'>Lat:</span>{" "}
-                          {watchedLat}
+                          {selectedIndianPort.lat}
                         </p>
                         <p>
                           <span className='text-muted-foreground'>Lng:</span>{" "}
-                          {watchedLng}
+                          {selectedIndianPort.lng}
                         </p>
                       </div>
                     </div>
