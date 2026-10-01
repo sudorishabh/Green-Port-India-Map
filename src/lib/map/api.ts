@@ -1,7 +1,8 @@
 import axios from "axios";
 import { Port, IInitiatives, KPIS } from "@/lib/map/types";
 
-const baseUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api`;
+// Served by this app's own Route Handlers (src/app/api).
+const baseUrl = "/api";
 
 // Port API methods
 export async function getPorts(): Promise<Port[]> {
