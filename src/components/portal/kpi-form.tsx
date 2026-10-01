@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, PlusCircle, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { isHttpUrl } from "@/lib/urls";
 import type { Kpis } from "@/lib/portal/types";
+import { kpiSchema, type KpiInput } from "@/lib/schemas/kpi";
 import {
   Select,
   SelectContent,
@@ -29,28 +29,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// Mirrors the port_kpis and kpi_target_links tables.
-const kpiTargetLinkSchema = z.object({
-  link_id: z.number().optional(), // Present for links that already exist
-  target_type: z
-    .string()
-    .min(1, "Link type is required (e.g., National, International)"),
-  link_url: z.string().refine(isHttpUrl, "Must be an http:// or https:// URL"),
-});
+type KpiFormValues = z.input<typeof kpiSchema>;
 
-const kpiFormSchema = z.object({
-  kpi_category: z.string().min(1, "Category is required"),
-  kpi: z.string().min(1, "KPI name is required"),
-  kpi_international_target: z
-    .string()
-    .min(1, "International target is required"),
-  kpi_national_target: z.string().min(1, "National target is required"),
-  kpi_target_links: z.array(kpiTargetLinkSchema).optional(),
-});
-
-export type KpiFormData = z.infer<typeof kpiFormSchema>;
-
-const EMPTY_FORM: KpiFormData = {
+const EMPTY_FORM: KpiFormValues = {
   kpi_category: "",
   kpi: "",
   kpi_international_target: "",
@@ -61,7 +42,7 @@ const EMPTY_FORM: KpiFormData = {
 interface KpiFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: KpiFormData) => void;
+  onSubmit: (data: KpiInput) => void;
   isLoading?: boolean;
   /** The KPI being edited, or null when adding a new one. */
   isKpi: Kpis | null;
@@ -80,8 +61,8 @@ export function KpiForm({
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<KpiFormData>({
-    resolver: zodResolver(kpiFormSchema),
+  } = useForm<KpiFormValues, unknown, KpiInput>({
+    resolver: zodResolver(kpiSchema),
     defaultValues: EMPTY_FORM,
   });
 
@@ -109,11 +90,7 @@ export function KpiForm({
       kpi_target_links: [
         ...targetsLinks.national,
         ...targetsLinks.international,
-      ].map(({ link_id, target_type, link_url }) => ({
-        link_id,
-        target_type,
-        link_url,
-      })),
+      ].map(({ target_type, link_url }) => ({ target_type, link_url })),
     });
   }, [isKpi, reset]);
 
