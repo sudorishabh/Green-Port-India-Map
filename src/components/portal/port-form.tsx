@@ -25,6 +25,7 @@ import { useAddPortMutation } from "@/lib/portal/features/ports/portsApiSlice";
 import { useUpdatePortMutation } from "@/lib/portal/features/ports/portsApiSlice";
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
+import { HEX_COLOR } from "@/lib/schemas/port";
 
 /**
  * A form number from an input or the API, which returns decimal columns as
@@ -35,6 +36,17 @@ function toNumber(value: number | string | null | undefined) {
   return value === null || value === undefined || value === ""
     ? undefined
     : Number(value);
+}
+
+/** Validation rules for a coordinate, matching the API's limits. */
+function coordinateRules(label: string, limit: number) {
+  const message = `${label} must be between -${limit} and ${limit}`;
+  return {
+    setValueAs: toNumber,
+    required: `${label} is required`,
+    min: { value: -limit, message },
+    max: { value: limit, message },
+  };
 }
 
 export function PortForm({
@@ -231,6 +243,7 @@ export function PortForm({
                   <Label htmlFor='name'>Port Name *</Label>
                   <Input
                     id='name'
+                    maxLength={100}
                     {...register("name", {
                       required: "Port Name is required",
                     })}
@@ -247,6 +260,7 @@ export function PortForm({
                   <Label htmlFor='country'>Country *</Label>
                   <Input
                     id='country'
+                    maxLength={100}
                     {...register("country", {
                       required: "Country is required",
                     })}
@@ -264,6 +278,7 @@ export function PortForm({
                   <Label htmlFor='city'>City *</Label>
                   <Input
                     id='city'
+                    maxLength={100}
                     {...register("city", {
                       required: "City is required",
                     })}
@@ -323,10 +338,7 @@ export function PortForm({
                       id='lat'
                       type='number'
                       step='any'
-                      {...register("lat", {
-                        setValueAs: toNumber,
-                        required: "Latitude is required",
-                      })}
+                      {...register("lat", coordinateRules("Latitude", 90))}
                       placeholder='E.g., 1.290270'
                     />
                     {errors.lat && (
@@ -342,10 +354,7 @@ export function PortForm({
                       id='lng'
                       type='number'
                       step='any'
-                      {...register("lng", {
-                        setValueAs: toNumber,
-                        required: "Longitude is required",
-                      })}
+                      {...register("lng", coordinateRules("Longitude", 180))}
                       placeholder='E.g., 103.851959'
                     />
                     {errors.lng && (
@@ -393,6 +402,7 @@ export function PortForm({
                     <Label htmlFor='port_type'>Port Type</Label>
                     <Input
                       id='port_type'
+                      maxLength={100}
                       {...register("port_type", {
                         // required: "Port Type is required", // Make optional
                       })}
@@ -451,6 +461,7 @@ export function PortForm({
                     <Label htmlFor='dominant_cargo'>Dominant Cargo</Label>
                     <Input
                       id='dominant_cargo'
+                      maxLength={200}
                       {...register("dominant_cargo", {
                         // required: "Dominant Cargo is required", // Make optional
                       })}
@@ -487,10 +498,10 @@ export function PortForm({
                         id='zoom_center_lat'
                         type='number'
                         step='any'
-                        {...register("zoom_center_lat", {
-                          setValueAs: toNumber,
-                          required: "Zoom Center Latitude is required",
-                        })}
+                        {...register(
+                          "zoom_center_lat",
+                          coordinateRules("Zoom Center Latitude", 90)
+                        )}
                         placeholder='Enter zoom center latitude'
                       />
                       {errors.zoom_center_lat && (
@@ -507,10 +518,10 @@ export function PortForm({
                         id='zoom_center_lng'
                         type='number'
                         step='any'
-                        {...register("zoom_center_lng", {
-                          setValueAs: toNumber,
-                          required: "Zoom Center Longitude is required",
-                        })}
+                        {...register(
+                          "zoom_center_lng",
+                          coordinateRules("Zoom Center Longitude", 180)
+                        )}
                         placeholder='Enter zoom center longitude'
                       />
                       {errors.zoom_center_lng && (
@@ -548,6 +559,10 @@ export function PortForm({
                           id='polyline_color'
                           {...register("polyline_color", {
                             required: "Polyline Color is required",
+                            pattern: {
+                              value: HEX_COLOR,
+                              message: "Use a hex colour such as #ff0000",
+                            },
                           })}
                           placeholder='#FF0000'
                           className='flex-grow'

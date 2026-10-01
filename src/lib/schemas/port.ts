@@ -8,7 +8,7 @@ export const PORT_STATUSES = ["Active", "Inactive"] as const;
 /** Largest value a Postgres `integer` column holds. */
 const MAX_INTEGER = 2_147_483_647;
 
-const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+export const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
 const text = (maxLength: number) => z.string().trim().max(maxLength);
 
