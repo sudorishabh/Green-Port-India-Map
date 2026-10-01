@@ -30,4 +30,5 @@ export const kpiErrorCodes = {
   INVALID_INITIATIVE_ID: 3007,
   /** A target or initiative link that isn't an http(s) URL. */
   INVALID_URL: 3008,
+  INVALID_INITIATIVE_DATA: 3009,
 } as const;
