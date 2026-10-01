@@ -5,6 +5,7 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand: #115d92;
 }
 
 /*
@@ -86,10 +87,6 @@
     background-color: rgba(187, 187, 187, 0.524);
     border-radius: 20px;
   }
-}
-
-.overflow-hidden {
-  overflow: hidden;
 }
 
 .marquee {

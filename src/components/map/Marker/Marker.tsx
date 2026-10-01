@@ -13,8 +13,7 @@ interface PortalInfo {
 
 interface MarkersProps {
   ports: Port[];
-  setIsModal: (isModal: boolean) => void;
-  setModalPortData: (port: Port) => void;
+  onOpenDetails: (port: Port) => void;
   setClickedPort: (port: Port | null) => void;
   setDefaultZoom: (defaultZoom: number) => void;
   clickedPort: Port | null;
@@ -25,8 +24,7 @@ interface MarkersProps {
 
 const Markers: React.FC<MarkersProps> = ({
   ports,
-  setIsModal,
-  setModalPortData,
+  onOpenDetails,
   setClickedPort,
   setDefaultZoom,
   clickedPort,
@@ -124,8 +122,7 @@ const Markers: React.FC<MarkersProps> = ({
               <MarkerCard
                 port={port}
                 clickedPort={clickedPort}
-                setIsModal={setIsModal}
-                setModalPortData={setModalPortData}
+                onOpenDetails={onOpenDetails}
               />
             )}
           </AdvancedMarker>

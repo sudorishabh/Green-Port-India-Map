@@ -27,8 +27,7 @@ const MapBoard = ({
   kpis: KPIS[];
   isLoading: boolean;
 }) => {
-  const [isModal, setIsModal] = useState<boolean>(false);
-  const [modalPortData, setModalPortData] = useState<Port>({} as Port);
+  const [detailsPort, setDetailsPort] = useState<Port | null>(null);
   const [clickedPort, setClickedPort] = useState<Port | null>(null);
   const [hoveredPort, setHoveredPort] = useState<Port | null>(null);
   const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM);
@@ -91,37 +90,34 @@ const MapBoard = ({
   if (isLoading) return <Loader />;
 
   return (
-    <Map
-      onClick={handleMapClick}
-      mapId={process.env.NEXT_PUBLIC_MAP_ID}
-      defaultCenter={DEFAULT_COORDS}
-      defaultZoom={DEFAULT_ZOOM}
-      minZoom={MIN_ZOOM}
-      restriction={WORLD_BOUNDS}
-      fullscreenControl={false}>
-      {!isLoading ? (
-        <>
-          <Marker
-            setDefaultZoom={setZoom}
-            ports={ports}
-            setIsModal={setIsModal}
-            setModalPortData={setModalPortData}
-            setClickedPort={setClickedPort}
-            clickedPort={clickedPort}
-            setDefaultCenter={setDefaultCenter}
-            setHoveredPort={setHoveredPort}
-            hoveredPort={hoveredPort}
-          />
-          {isModal ? (
-            <ModalWindow
-              setIsModal={setIsModal}
-              port={modalPortData}
-              kpis={kpis}
-            />
-          ) : null}
-        </>
+    <>
+      <Map
+        onClick={handleMapClick}
+        mapId={process.env.NEXT_PUBLIC_MAP_ID}
+        defaultCenter={DEFAULT_COORDS}
+        defaultZoom={DEFAULT_ZOOM}
+        minZoom={MIN_ZOOM}
+        restriction={WORLD_BOUNDS}
+        fullscreenControl={false}>
+        <Marker
+          setDefaultZoom={setZoom}
+          ports={ports}
+          onOpenDetails={setDetailsPort}
+          setClickedPort={setClickedPort}
+          clickedPort={clickedPort}
+          setDefaultCenter={setDefaultCenter}
+          setHoveredPort={setHoveredPort}
+          hoveredPort={hoveredPort}
+        />
+      </Map>
+      {detailsPort ? (
+        <ModalWindow
+          port={detailsPort}
+          kpis={kpis}
+          onClose={() => setDetailsPort(null)}
+        />
       ) : null}
-    </Map>
+    </>
   );
 };
 

@@ -11,12 +11,11 @@ import PortImage from "../PortImage";
 interface Props {
   port: Port;
   clickedPort: Port | null;
-  setIsModal: (isModal: boolean) => void;
-  setModalPortData: (port: Port) => void;
+  onOpenDetails: (port: Port) => void;
 }
 
 const MarkerHoverCard: FC<Props> = React.memo(
-  ({ port, clickedPort, setIsModal, setModalPortData }) => {
+  ({ port, clickedPort, onOpenDetails }) => {
     const [flip, setFlip] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
@@ -31,9 +30,8 @@ const MarkerHoverCard: FC<Props> = React.memo(
     }, [clickedPort, port.name]);
 
     const handleClickCard = useCallback(() => {
-      setIsModal(true);
-      setModalPortData(port);
-    }, [port, setIsModal, setModalPortData]);
+      onOpenDetails(port);
+    }, [port, onOpenDetails]);
 
     return (
       <div
