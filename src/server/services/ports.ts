@@ -69,7 +69,11 @@ export async function createPort(input: PortInput) {
 
 export async function updatePort(portId: number, input: PortUpdate) {
   if (Object.values(input).every((value) => value === undefined)) {
-    throw new AppError(portErrorCodes.INVALID_PORT_DATA, 400);
+    throw new AppError(
+      portErrorCodes.INVALID_PORT_DATA,
+      400,
+      "No port fields to update",
+    );
   }
 
   const updated = await db
