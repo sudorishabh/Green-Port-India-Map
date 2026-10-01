@@ -15,6 +15,13 @@
       "when": 1790857586896,
       "tag": "0001_sparkling_lenny_balinger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790861417076,
+      "tag": "0002_slimy_alex_power",
+      "breakpoints": true
     }
   ]
 }

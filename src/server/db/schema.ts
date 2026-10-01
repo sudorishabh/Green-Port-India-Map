@@ -13,6 +13,8 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: text("password").notNull(),
   refreshToken: text("refresh_token"),
+  /** Carried by every session token; incrementing it revokes all of the user's sessions. */
+  sessionVersion: integer("session_version").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

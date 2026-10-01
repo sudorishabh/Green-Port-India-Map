@@ -1,0 +1,448 @@
+{
+  "id": "7a73b8fd-f1bb-4120-be89-5509acc29f98",
+  "prevId": "e40e1d57-4796-4763-a812-861d5e5ed5ed",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.kpi_target_links": {
+      "name": "kpi_target_links",
+      "schema": "",
+      "columns": {
+        "link_id": {
+          "name": "link_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "target_type": {
+          "name": "target_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "link_url": {
+          "name": "link_url",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "kpi_id": {
+          "name": "kpi_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "kpi_target_links_kpi_id_port_kpis_kpi_id_fk": {
+          "name": "kpi_target_links_kpi_id_port_kpis_kpi_id_fk",
+          "tableFrom": "kpi_target_links",
+          "tableTo": "port_kpis",
+          "columnsFrom": [
+            "kpi_id"
+          ],
+          "columnsTo": [
+            "kpi_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.port_green_initiatives": {
+      "name": "port_green_initiatives",
+      "schema": "",
+      "columns": {
+        "initiative_id": {
+          "name": "initiative_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "initiative": {
+          "name": "initiative",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "initiative_url": {
+          "name": "initiative_url",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kpi": {
+          "name": "kpi",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "kpi_id": {
+          "name": "kpi_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "portId": {
+          "name": "portId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "port_green_initiatives_kpi_id_port_kpis_kpi_id_fk": {
+          "name": "port_green_initiatives_kpi_id_port_kpis_kpi_id_fk",
+          "tableFrom": "port_green_initiatives",
+          "tableTo": "port_kpis",
+          "columnsFrom": [
+            "kpi_id"
+          ],
+          "columnsTo": [
+            "kpi_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "port_green_initiatives_portId_port_master_port_id_fk": {
+          "name": "port_green_initiatives_portId_port_master_port_id_fk",
+          "tableFrom": "port_green_initiatives",
+          "tableTo": "port_master",
+          "columnsFrom": [
+            "portId"
+          ],
+          "columnsTo": [
+            "port_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.port_kpis": {
+      "name": "port_kpis",
+      "schema": "",
+      "columns": {
+        "kpi_id": {
+          "name": "kpi_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kpi_category": {
+          "name": "kpi_category",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kpi": {
+          "name": "kpi",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kpi_international_target": {
+          "name": "kpi_international_target",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kpi_national_target": {
+          "name": "kpi_national_target",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "current_status": {
+          "name": "current_status",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.port_master": {
+      "name": "port_master",
+      "schema": "",
+      "columns": {
+        "port_id": {
+          "name": "port_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "port_location_type": {
+          "name": "port_location_type",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Indian'"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "country": {
+          "name": "country",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "number_of_berths": {
+          "name": "number_of_berths",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "port_type": {
+          "name": "port_type",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "average_tat": {
+          "name": "average_tat",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "port_capacity": {
+          "name": "port_capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "dominant_cargo": {
+          "name": "dominant_cargo",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "lat": {
+          "name": "lat",
+          "type": "numeric(6, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0.000'"
+        },
+        "lng": {
+          "name": "lng",
+          "type": "numeric(6, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0.000'"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "ind_port_name": {
+          "name": "ind_port_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
+        },
+        "ind_port_lat": {
+          "name": "ind_port_lat",
+          "type": "numeric(6, 3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.000'"
+        },
+        "ind_port_lng": {
+          "name": "ind_port_lng",
+          "type": "numeric(6, 3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.000'"
+        },
+        "polyline_curve": {
+          "name": "polyline_curve",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 4
+        },
+        "zoom": {
+          "name": "zoom",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 3
+        },
+        "polyline_color": {
+          "name": "polyline_color",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'#000000'"
+        },
+        "zoom_center_lat": {
+          "name": "zoom_center_lat",
+          "type": "numeric(6, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'5.6'"
+        },
+        "zoom_center_lng": {
+          "name": "zoom_center_lng",
+          "type": "numeric(6, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'5.6'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session_version": {
+          "name": "session_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
