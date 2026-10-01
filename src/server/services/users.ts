@@ -46,6 +46,7 @@ export async function registerUser({ email, password }: Credentials) {
   if (!created) throw new AppError(authErrorCodes.USER_ALREADY_EXISTS, 400);
 }
 
+/** An unknown email and a wrong password fail identically, so logins can't be used to find accounts. */
 export async function authenticateUser({
   email,
   password,
@@ -56,11 +57,9 @@ export async function authenticateUser({
     .where(eq(users.email, email))
     .limit(1);
 
-  if (!user) throw new AppError(authErrorCodes.USER_NOT_FOUND, 401);
-
-  const isPasswordValid = await verifyPassword(password, user.password);
-  if (!isPasswordValid) {
-    throw new AppError(authErrorCodes.WRONG_PASSWORD, 401);
+  const isPasswordValid = await verifyPassword(password, user?.password);
+  if (!user || !isPasswordValid) {
+    throw new AppError(authErrorCodes.INVALID_CREDENTIALS, 401);
   }
 
   return { id: user.id, email: user.email };
