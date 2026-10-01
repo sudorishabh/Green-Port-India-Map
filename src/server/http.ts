@@ -1,4 +1,5 @@
 import "server-only";
+import { DrizzleQueryError } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { isHttpUrl } from "@/lib/urls";
 import { AppError } from "./errors";
@@ -22,6 +23,25 @@ const defaultRateLimiter = createRateLimiter({
 });
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/** Largest value of a Postgres `serial` id. */
+const MAX_ID = 2_147_483_647;
+
+/**
+ * Postgres errors caused by the request's data rather than a server fault,
+ * keyed by SQLSTATE, so they reach the client as 4xx instead of a logged 500.
+ */
+const POSTGRES_CLIENT_ERRORS = new Map<
+  string,
+  [status: number, message: string]
+>([
+  ["23505", [409, "A record with these details already exists"]],
+  ["23503", [404, "A referenced record does not exist"]],
+  ["23502", [400, "A required field is missing"]],
+  ["22001", [400, "A value is too long"]],
+  ["22003", [400, "A number is out of range"]],
+  ["22P02", [400, "A value has the wrong type"]],
+]);
 
 /**
  * Wraps a Route Handler with the API's cross-cutting concerns: per-IP rate
@@ -72,7 +92,7 @@ export function parseId(
   errorCode: number,
 ): number {
   const id = Number(value);
-  if (!value || !Number.isInteger(id) || id <= 0) {
+  if (!value || !Number.isInteger(id) || id <= 0 || id > MAX_ID) {
     throw new AppError(errorCode, 400);
   }
   return id;
@@ -99,10 +119,8 @@ function isCrossSiteWrite(request: NextRequest) {
 
 function toErrorResponse(error: unknown): Response {
   const appError =
-    error instanceof AppError
-      ? error
-      : new AppError(500, 500, "Internal Server Error");
-  if (appError !== error) console.error(error);
+    toClientError(error) ?? new AppError(500, 500, "Internal Server Error");
+  if (appError.status >= 500) console.error(error);
 
   const stack = error instanceof Error ? error.stack : undefined;
   return Response.json(
@@ -114,6 +132,25 @@ function toErrorResponse(error: unknown): Response {
     },
     { status: appError.status },
   );
+}
+
+/** The error as a client-facing `AppError`, or undefined when it is a server fault. */
+function toClientError(error: unknown): AppError | undefined {
+  if (error instanceof AppError) return error;
+
+  const code = getPostgresErrorCode(error);
+  const mapped = code ? POSTGRES_CLIENT_ERRORS.get(code) : undefined;
+  if (!mapped) return undefined;
+
+  const [status, message] = mapped;
+  return new AppError(status, status, message);
+}
+
+/** The SQLSTATE of a failed query; Drizzle wraps the driver's error in `cause`. */
+function getPostgresErrorCode(error: unknown): string | undefined {
+  const cause = error instanceof DrizzleQueryError ? error.cause : error;
+  const code = (cause as { code?: unknown } | undefined)?.code;
+  return typeof code === "string" ? code : undefined;
 }
 
 /**
