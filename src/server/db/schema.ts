@@ -24,7 +24,8 @@ export const portMaster = pgTable("port_master", {
   port_location_type: varchar("port_location_type", { length: 100 })
     .notNull()
     .default("Indian"),
-  name: varchar("name", { length: 100 }).notNull().default(""),
+  /** Unique: partner ports refer to their Indian hub by name (ind_port_name). */
+  name: varchar("name", { length: 100 }).notNull().default("").unique(),
   country: varchar("country", { length: 100 }).notNull().default(""),
   city: varchar("city", { length: 100 }).notNull().default(""),
   number_of_berths: integer("number_of_berths").notNull().default(0),

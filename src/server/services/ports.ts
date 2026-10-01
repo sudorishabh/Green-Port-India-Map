@@ -4,7 +4,11 @@ import { portErrorCodes } from "@/lib/error-codes";
 import type { PortInput, PortUpdate } from "@/lib/schemas/port";
 import { db } from "@/server/db";
 import { portMaster } from "@/server/db/schema";
-import { AppError } from "@/server/errors";
+import {
+  AppError,
+  getPostgresErrorCode,
+  UNIQUE_VIOLATION,
+} from "@/server/errors";
 
 /** Placeholder pictures in public/ports, spread across ports by id. */
 const PORT_PICTURE_COUNT = 6;
@@ -57,14 +61,7 @@ export async function getPort(portId: number) {
 }
 
 export async function createPort(input: PortInput) {
-  const [existing] = await db
-    .select({ port_id: portMaster.port_id })
-    .from(portMaster)
-    .where(eq(portMaster.name, input.name))
-    .limit(1);
-  if (existing) throw new AppError(portErrorCodes.PORT_ALREADY_EXISTS, 400);
-
-  await db.insert(portMaster).values(input);
+  await withUniqueName(db.insert(portMaster).values(input));
 }
 
 export async function updatePort(portId: number, input: PortUpdate) {
@@ -76,11 +73,13 @@ export async function updatePort(portId: number, input: PortUpdate) {
     );
   }
 
-  const updated = await db
-    .update(portMaster)
-    .set(input)
-    .where(eq(portMaster.port_id, portId))
-    .returning({ port_id: portMaster.port_id });
+  const updated = await withUniqueName(
+    db
+      .update(portMaster)
+      .set(input)
+      .where(eq(portMaster.port_id, portId))
+      .returning({ port_id: portMaster.port_id }),
+  );
   if (updated.length === 0) throw portNotFound();
 }
 
@@ -94,4 +93,24 @@ export async function deletePort(portId: number) {
 
 function portNotFound() {
   return new AppError(portErrorCodes.INVALID_PORT_ID, 404, "Port not found");
+}
+
+/**
+ * Runs a port write, reporting a clash with the unique port name as
+ * PORT_ALREADY_EXISTS. The database does the check, so two requests creating
+ * or renaming to the same name at once can't both succeed.
+ */
+async function withUniqueName<T>(write: Promise<T>): Promise<T> {
+  try {
+    return await write;
+  } catch (error) {
+    if (getPostgresErrorCode(error) === UNIQUE_VIOLATION) {
+      throw new AppError(
+        portErrorCodes.PORT_ALREADY_EXISTS,
+        409,
+        "A port with this name already exists",
+      );
+    }
+    throw error;
+  }
 }

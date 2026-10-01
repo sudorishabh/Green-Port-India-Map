@@ -1,8 +1,7 @@
 import "server-only";
-import { DrizzleQueryError } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import type { z } from "zod";
-import { AppError } from "./errors";
+import { AppError, getPostgresErrorCode } from "./errors";
 import { createRateLimiter, type RateLimiter } from "./rate-limit";
 
 type RouteHandler<Context> = (
@@ -160,13 +159,6 @@ function toClientError(error: unknown): AppError | undefined {
 
   const [status, message] = mapped;
   return new AppError(status, status, message);
-}
-
-/** The SQLSTATE of a failed query; Drizzle wraps the driver's error in `cause`. */
-function getPostgresErrorCode(error: unknown): string | undefined {
-  const cause = error instanceof DrizzleQueryError ? error.cause : error;
-  const code = (cause as { code?: unknown } | undefined)?.code;
-  return typeof code === "string" ? code : undefined;
 }
 
 /**
