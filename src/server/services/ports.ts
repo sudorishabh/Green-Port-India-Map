@@ -1,5 +1,5 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { eq, getTableColumns } from "drizzle-orm";
 import { portErrorCodes } from "@/lib/error-codes";
 import { db } from "@/server/db";
 import { portMaster } from "@/server/db/schema";
@@ -9,6 +9,11 @@ export type PortInput = Omit<
   typeof portMaster.$inferInsert,
   "port_id" | "created_at"
 >;
+
+/** Columns clients may write. The id and creation time belong to the database. */
+const EDITABLE_PORT_FIELDS = Object.keys(getTableColumns(portMaster)).filter(
+  (field) => field !== "port_id" && field !== "created_at",
+) as (keyof PortInput)[];
 
 /** Placeholder pictures in public/ports, spread across ports by id. */
 const PORT_PICTURE_COUNT = 6;
@@ -71,13 +76,27 @@ export async function createPort(input: PortInput) {
     .limit(1);
   if (existing) throw new AppError(portErrorCodes.PORT_ALREADY_EXISTS, 400);
 
-  await db.insert(portMaster).values(input);
+  await db.insert(portMaster).values(pickPortFields(input));
 }
 
 export async function updatePort(portId: number, input: Partial<PortInput>) {
-  await db.update(portMaster).set(input).where(eq(portMaster.port_id, portId));
+  const fields = pickPortFields(input);
+  if (Object.keys(fields).length === 0) {
+    throw new AppError(portErrorCodes.INVALID_PORT_DATA, 400);
+  }
+
+  await db.update(portMaster).set(fields).where(eq(portMaster.port_id, portId));
 }
 
 export async function deletePort(portId: number) {
   await db.delete(portMaster).where(eq(portMaster.port_id, portId));
+}
+
+/** Copies the editable columns out of a request body, dropping everything else. */
+function pickPortFields(input: Partial<PortInput>): PortInput {
+  return Object.fromEntries(
+    EDITABLE_PORT_FIELDS.filter((field) => input?.[field] !== undefined).map(
+      (field) => [field, input[field]],
+    ),
+  );
 }
