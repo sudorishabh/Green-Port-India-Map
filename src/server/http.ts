@@ -1,5 +1,6 @@
 import "server-only";
 import type { NextRequest } from "next/server";
+import { isHttpUrl } from "@/lib/urls";
 import { AppError } from "./errors";
 import { rateLimit } from "./rate-limit";
 
@@ -58,6 +59,12 @@ export function parseId(
     throw new AppError(errorCode, 400);
   }
   return id;
+}
+
+/** Returns `value` if it is an http(s) URL, or throws `errorCode` with a 400. */
+export function parseHttpUrl(value: unknown, errorCode: number): string {
+  if (!isHttpUrl(value)) throw new AppError(errorCode, 400);
+  return value;
 }
 
 function toErrorResponse(error: unknown): Response {

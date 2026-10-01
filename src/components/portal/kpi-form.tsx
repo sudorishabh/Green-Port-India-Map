@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, PlusCircle, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isHttpUrl } from "@/lib/urls";
 import type { Kpis } from "@/lib/portal/types";
 import {
   Select,
@@ -34,7 +35,7 @@ const kpiTargetLinkSchema = z.object({
   target_type: z
     .string()
     .min(1, "Link type is required (e.g., National, International)"),
-  link_url: z.url("Must be a valid URL"),
+  link_url: z.string().refine(isHttpUrl, "Must be an http:// or https:// URL"),
 });
 
 const kpiFormSchema = z.object({
