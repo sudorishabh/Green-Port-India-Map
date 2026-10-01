@@ -111,7 +111,7 @@ const Kpis = ({ setIsInitiativesOpen, kpis, setKpiId }: KpisProps) => {
                     )}
                   </div>
                   {dropdownKpi === kpi && (
-                    <div className='mt-2 flex flex-col justify-center text-sm p-4 rounded'>
+                    <div className='mt-2 flex flex-col justify-center text-sm p-4 rounded-sm'>
                       <h2 className='text-center font-semibold text-gray-800 uppercase'>
                         <span className='text-green-600 mr-1'>Targets</span> of{" "}
                         {kpi}
