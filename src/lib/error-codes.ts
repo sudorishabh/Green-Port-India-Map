@@ -11,6 +11,7 @@ export const authErrorCodes = {
   NO_REFRESH_TOKEN: 4008,
   SESSION_EXPIRED: 4009,
   INVALID_REFRESH_TOKEN: 4010,
+  PASSWORD_TOO_SHORT: 4011,
   /** Access token missing or expired: clients should refresh the session and retry. */
   UNAUTHENTICATED: 10001,
 } as const;

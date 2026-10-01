@@ -3,6 +3,7 @@ import {
   kpiErrorCodes,
   portErrorCodes,
 } from "@/lib/error-codes";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwords";
 
 /** User-facing messages for the API's `errorCode`s. */
 export const errorMessages: Record<number, string> = {
@@ -16,6 +17,7 @@ export const errorMessages: Record<number, string> = {
   [authErrorCodes.NO_REFRESH_TOKEN]: "No refresh token",
   [authErrorCodes.SESSION_EXPIRED]: "Session expired",
   [authErrorCodes.INVALID_REFRESH_TOKEN]: "Invalid refresh token",
+  [authErrorCodes.PASSWORD_TOO_SHORT]: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
 
   [portErrorCodes.INVALID_PORT_ID]: "Invalid port ID",
   [portErrorCodes.INVALID_PORT_DATA]: "Invalid port data",

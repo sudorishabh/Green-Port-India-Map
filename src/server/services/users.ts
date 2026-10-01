@@ -1,6 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { authErrorCodes } from "@/lib/error-codes";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwords";
 import {
   hashPassword,
   normalizeEmail,
@@ -30,7 +31,12 @@ export function parseCredentials(body: Partial<Credentials>): Credentials {
   return { email: normalizeEmail(email), password };
 }
 
+/** Creates an account. Only new passwords are length-checked, so existing users can still sign in. */
 export async function registerUser({ email, password }: Credentials) {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    throw new AppError(authErrorCodes.PASSWORD_TOO_SHORT, 400);
+  }
+
   const [created] = await db
     .insert(users)
     .values({ email, password: await hashPassword(password) })
