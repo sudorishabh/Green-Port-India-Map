@@ -16,6 +16,8 @@ cp .env.example .env   # then fill in the values
 npm run dev            # http://localhost:3000
 ```
 
+There is no public sign-up. Create the first portal account with `npm run db:create-user -- you@example.com`; signed-in users can then add more from the portal's Users page.
+
 ## Scripts
 
 | Script                | Description                                        |
@@ -29,6 +31,7 @@ npm run dev            # http://localhost:3000
 | `npm run db:migrate`  | Apply pending migrations                           |
 | `npm run db:studio`   | Open Drizzle Studio                                |
 | `npm run db:seed`     | Seed ports, KPIs and green initiatives (re-runnable) |
+| `npm run db:create-user -- <email>` | Create a portal account and print its generated password |
 
 ## Environment variables
 

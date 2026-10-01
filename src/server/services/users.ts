@@ -1,13 +1,15 @@
 import "server-only";
-import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { authErrorCodes } from "@/lib/error-codes";
+import {
+  hashPassword,
+  normalizeEmail,
+  verifyPassword,
+} from "@/server/credentials";
 import { db } from "@/server/db";
 import { users } from "@/server/db/schema";
 import { AppError } from "@/server/errors";
 import type { SessionUser } from "@/server/session";
-
-const PASSWORD_SALT_ROUNDS = 10;
 
 export interface Credentials {
   email: string;
@@ -29,10 +31,9 @@ export function parseCredentials(body: Partial<Credentials>): Credentials {
 }
 
 export async function registerUser({ email, password }: Credentials) {
-  const passwordHash = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
   const [created] = await db
     .insert(users)
-    .values({ email, password: passwordHash })
+    .values({ email, password: await hashPassword(password) })
     .onConflictDoNothing({ target: users.email })
     .returning({ id: users.id });
 
@@ -51,7 +52,7 @@ export async function authenticateUser({
 
   if (!user) throw new AppError(authErrorCodes.USER_NOT_FOUND, 401);
 
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+  const isPasswordValid = await verifyPassword(password, user.password);
   if (!isPasswordValid) {
     throw new AppError(authErrorCodes.WRONG_PASSWORD, 401);
   }
@@ -66,8 +67,4 @@ export async function findUser(userId: number): Promise<SessionUser | undefined>
     .where(eq(users.id, userId))
     .limit(1);
   return user;
-}
-
-function normalizeEmail(email: string) {
-  return email.toLowerCase().trim();
 }
