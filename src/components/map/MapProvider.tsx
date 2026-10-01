@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { config } from "@fortawesome/fontawesome-svg-core";
@@ -8,7 +8,8 @@ import { config } from "@fortawesome/fontawesome-svg-core";
 config.autoAddCss = false;
 
 const MapProvider = ({ children }: { children: React.ReactNode }) => {
-  const queryClient = new QueryClient();
+  // Lazily created once so re-renders don't discard the query cache.
+  const [queryClient] = useState(() => new QueryClient());
   return (
     <QueryClientProvider client={queryClient}>
       <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAP_API as string}>
