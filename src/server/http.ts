@@ -21,9 +21,12 @@ const defaultRateLimiter = createRateLimiter({
   maxRequests: 250,
 });
 
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
 /**
  * Wraps a Route Handler with the API's cross-cutting concerns: per-IP rate
- * limiting and a consistent JSON error body `{ success, message, errorCode }`.
+ * limiting, blocking cross-site writes and a consistent JSON error body
+ * `{ success, message, errorCode }`.
  */
 export function apiRoute<Context>(
   handler: RouteHandler<Context>,
@@ -38,6 +41,12 @@ export function apiRoute<Context>(
       );
       response.headers.set("Retry-After", String(retryAfterSeconds));
       return response;
+    }
+
+    if (isCrossSiteWrite(request)) {
+      return toErrorResponse(
+        new AppError(403, 403, "Cross-site requests are not allowed"),
+      );
     }
 
     try {
@@ -73,6 +82,19 @@ export function parseId(
 export function parseHttpUrl(value: unknown, errorCode: number): string {
   if (!isHttpUrl(value)) throw new AppError(errorCode, 400);
   return value;
+}
+
+/**
+ * Whether a state-changing request came from another site (including sibling
+ * subdomains), per the browser's `Sec-Fetch-Site` header. Requests without the
+ * header (curl, older browsers) still rely on the SameSite session cookies.
+ */
+function isCrossSiteWrite(request: NextRequest) {
+  const site = request.headers.get("sec-fetch-site");
+  return (
+    !SAFE_METHODS.has(request.method) &&
+    (site === "cross-site" || site === "same-site")
+  );
 }
 
 function toErrorResponse(error: unknown): Response {

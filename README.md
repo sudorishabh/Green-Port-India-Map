@@ -92,4 +92,4 @@ Every endpoint returns JSON. Errors look like `{ success: false, message, errorC
 | POST   | `/api/kpi/initiatives/:kpiId/:portId`, `/api/kpi/update-initiative/:id` | 🔒 |
 | DELETE | `/api/kpi/delete-initiative/:id`                | 🔒 |
 
-API responses carry helmet-equivalent security headers (`next.config.ts`) and are rate limited to 250 requests per 10 minutes per IP, or 10 per 15 minutes for `/api/auth/login` (in memory, per server instance). Portal pages can't be framed by other sites; the public map can.
+API responses carry helmet-equivalent security headers (`next.config.ts`) and are rate limited to 250 requests per 10 minutes per IP, or 10 per 15 minutes for `/api/auth/login` (in memory, per server instance). Portal pages can't be framed by other sites; the public map can. Browsers' cross-site POST and DELETE requests are rejected with a 403.
