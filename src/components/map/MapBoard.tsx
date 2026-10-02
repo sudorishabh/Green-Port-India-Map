@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Map, useMap } from "@vis.gl/react-google-maps";
+import { Map, Polyline, useMap } from "@vis.gl/react-google-maps";
 import Marker from "@/components/map/Marker/Marker";
 import { KPIS, Port } from "@/lib/map/types";
 import ModalWindow from "./ModalWindow/ModalWindow";
-import { createCurvePath } from "@/lib/map/polylinesCurves";
-import { getPortPaths } from "@/lib/map/getPortPath";
+import { getRoutes, Route } from "@/lib/map/routes";
 import { findHub, partnersOf } from "@/lib/map/ports";
 import Loader from "./Loader";
 import { PortSummary } from "./Marker/MarkerCard";
@@ -22,6 +21,17 @@ const WORLD_BOUNDS = {
   latLngBounds: { north: 85, south: -85, west: -180, east: 180 },
   strictBounds: true,
 };
+
+const RouteLines = ({ routes }: { routes: Route[] }) =>
+  routes.map(({ key, path, color }) => (
+    <Polyline
+      key={key}
+      path={path}
+      strokeColor={color}
+      strokeOpacity={1}
+      strokeWeight={1.5}
+    />
+  ));
 
 const MapBoard = ({
   ports,
@@ -46,51 +56,22 @@ const MapBoard = ({
     map.setCenter(defaultCenter);
   }, [map, zoom, defaultCenter]);
 
-  const polylinePaths = useMemo(() => {
-    const clickedPaths = clickedPort ? getPortPaths(clickedPort, ports) : [];
-    const hoveredPaths = hoveredPort ? getPortPaths(hoveredPort, ports) : [];
-    return [...clickedPaths, ...hoveredPaths];
-  }, [clickedPort, hoveredPort, ports]);
+  const selectedRoutes = useMemo(
+    () => getRoutes(clickedPort, ports),
+    [clickedPort, ports]
+  );
+  // A selected port's routes are already drawn, so hovering it adds nothing.
+  const hoveredRoutes = useMemo(
+    () =>
+      hoveredPort?.port_id === clickedPort?.port_id
+        ? []
+        : getRoutes(hoveredPort, ports),
+    [hoveredPort, clickedPort, ports]
+  );
 
   const handleMapClick = useCallback(() => {
     setClickedPort(null);
   }, []);
-
-  useEffect(() => {
-    if (!map || polylinePaths.length === 0) return;
-
-    const validPolylines = polylinePaths
-      .map((polylinePath) => {
-        const [sourcePort, targetPort] = polylinePath;
-        if (!sourcePort || !sourcePort.ind_port_name) {
-          console.warn(
-            "Skipping polyline due to missing sourcePort data:",
-            sourcePort,
-          );
-          return null;
-        }
-
-        const curveFactor = targetPort.polyline_curve;
-
-        const curvedPath = createCurvePath(sourcePort, targetPort, curveFactor);
-
-        const colorInfo = sourcePort.polyline_color;
-
-        const polyline = new google.maps.Polyline({
-          path: curvedPath,
-          strokeColor: colorInfo,
-          strokeOpacity: 1,
-          strokeWeight: 1.5,
-        });
-
-        return polyline;
-      })
-      .filter((p): p is google.maps.Polyline => p !== null);
-
-    validPolylines.forEach((polyline) => polyline.setMap(map));
-
-    return () => validPolylines.forEach((polyline) => polyline.setMap(null));
-  }, [map, polylinePaths]);
 
   if (isLoading) return <Loader />;
 
@@ -104,6 +85,8 @@ const MapBoard = ({
         minZoom={MIN_ZOOM}
         restriction={WORLD_BOUNDS}
         fullscreenControl={false}>
+        <RouteLines routes={selectedRoutes} />
+        <RouteLines routes={hoveredRoutes} />
         <Marker
           setDefaultZoom={setZoom}
           ports={ports}
