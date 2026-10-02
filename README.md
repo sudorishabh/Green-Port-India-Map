@@ -8,15 +8,18 @@ An interactive map of India's ports, their trade routes and green shipping progr
 
 ## Getting started
 
-Requires Node.js 24+.
+You need Node.js 24+ (the `db:*` scripts run TypeScript files directly with Node) and a PostgreSQL database.
 
 ```bash
 npm install
-cp .env.example .env   # then fill in the values
-npm run dev            # http://localhost:3000
+cp .env.example .env                        # then fill in the values, see below
+npm run db:migrate                          # create the tables
+npm run db:seed                             # load the ports, KPIs and initiatives
+npm run db:create-user -- you@example.com   # prints the account's password once
+npm run dev                                 # http://localhost:3000
 ```
 
-There is no public sign-up. Create the first portal account with `npm run db:create-user -- you@example.com`; signed-in users can then add more from the portal's Users page.
+Sign in at http://localhost:3000/portal with that email and password. There is no public sign-up: signed-in users add more accounts from the portal's Users page.
 
 ## Scripts
 
@@ -35,12 +38,18 @@ There is no public sign-up. Create the first portal account with `npm run db:cre
 
 ## Environment variables
 
-See [`.env.example`](.env.example).
+Set these in `.env` (start from [`.env.example`](.env.example)). The app, drizzle-kit and the `db:*` scripts all read it.
 
-| Variable                                               | Used by | Notes                                                               |
-| ------------------------------------------------------ | ------- | ------------------------------------------------------------------- |
-| `DATABASE_URL`                                         | API     | PostgreSQL connection string                                        |
-| `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`          | API     | JWT signing secrets for the portal session cookies                  |
+| Variable                                      | Notes                                                                                                      |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                | PostgreSQL connection string, e.g. `postgres://user:password@localhost:5432/india_trade_network`           |
+| `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET` | Secrets that sign the portal's session cookies. Use two different long random strings                      |
+
+To generate a secret:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"
+```
 
 ## Project structure
 
