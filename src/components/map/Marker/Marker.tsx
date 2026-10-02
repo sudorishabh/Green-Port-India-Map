@@ -2,14 +2,8 @@ import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import MarkerCard from "./MarkerCard";
 import { Port } from "@/lib/map/types";
-import HoveredCardPortal from "./HoveredCardPortal";
-import PortPin from "./PortPin";
+import PortPin, { FALLBACK_PIN_COLOR } from "./PortPin";
 import { isHub } from "@/lib/map/ports";
-
-interface PortalInfo {
-  port: Port | null;
-  position: { x: number; y: number } | null;
-}
 
 interface MarkersProps {
   ports: Port[];
@@ -32,11 +26,6 @@ const Markers: React.FC<MarkersProps> = ({
   hoveredPort,
   setDefaultCenter,
 }) => {
-  const [hoveredPortalInfo, setHoveredPortalInfo] = useState<PortalInfo>({
-    port: null,
-    position: null,
-  });
-
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   useEffect(() => {
@@ -56,8 +45,22 @@ const Markers: React.FC<MarkersProps> = ({
     [ports]
   );
 
+  const partnerCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const { ind_port_name } of ports) {
+      if (ind_port_name)
+        counts.set(ind_port_name, (counts.get(ind_port_name) ?? 0) + 1);
+    }
+    return counts;
+  }, [ports]);
+
   const handleClickMarker = useCallback(
     (port: Port) => {
+      // A second click on the selected port opens its details.
+      if (clickedPort?.port_id === port.port_id) {
+        onOpenDetails(port);
+        return;
+      }
       setClickedPort(port);
 
       if (!isMobile && port && !port.ind_port_name) {
@@ -74,42 +77,27 @@ const Markers: React.FC<MarkersProps> = ({
         }
       }
     },
-    [setClickedPort, isMobile, setDefaultCenter, setDefaultZoom]
-  );
-
-  const handleHoverMarker = useCallback(
-    (port: Port | null, event?: React.MouseEvent) => {
-      setHoveredPort(port);
-
-      if (port) {
-        if (event) {
-          setHoveredPortalInfo({
-            port,
-            position: { x: event.clientX, y: event.clientY },
-          });
-        }
-      } else {
-        setHoveredPortalInfo({ port: null, position: null });
-      }
-    },
-    [setHoveredPort]
+    [
+      clickedPort,
+      onOpenDetails,
+      setClickedPort,
+      isMobile,
+      setDefaultCenter,
+      setDefaultZoom,
+    ]
   );
 
   return (
     <>
-      <HoveredCardPortal
-        port={hoveredPortalInfo.port}
-        position={hoveredPortalInfo.position}
-        clickedPort={clickedPort}
-      />
-
       {ports?.map((port) => {
         const position = { lat: +port.lat, lng: +port.lng };
 
-        const isHighlighted =
-          clickedPort?.port_id === port.port_id ||
-          hoveredPort?.port_id === port.port_id;
-        const hubName = isHub(port) ? port.name : port.ind_port_name;
+        const isSelected = clickedPort?.port_id === port.port_id;
+        const isHovered = hoveredPort?.port_id === port.port_id;
+        const isHighlighted = isSelected || isHovered;
+        const color =
+          hubColors.get((isHub(port) ? port.name : port.ind_port_name) ?? "") ||
+          FALLBACK_PIN_COLOR;
 
         return (
           <AdvancedMarker
@@ -122,19 +110,21 @@ const Markers: React.FC<MarkersProps> = ({
             zIndex={isHighlighted ? 100 : isHub(port) ? 2 : 1}
             onClick={() => handleClickMarker(port)}>
             <span
-              onMouseEnter={(e) => handleHoverMarker(port, e)}
-              onMouseLeave={() => handleHoverMarker(null)}>
+              onMouseEnter={() => setHoveredPort(port)}
+              onMouseLeave={() => setHoveredPort(null)}>
               <PortPin
                 port={port}
-                color={hubColors.get(hubName ?? "")}
+                color={color}
                 isHighlighted={isHighlighted}
               />
             </span>
 
-            {clickedPort?.port_id === port.port_id && (
+            {isHighlighted && (
               <MarkerCard
                 port={port}
-                clickedPort={clickedPort}
+                color={color}
+                partnerCount={partnerCounts.get(port.name) ?? 0}
+                isSelected={isSelected}
                 onOpenDetails={onOpenDetails}
               />
             )}

@@ -5,8 +5,12 @@ import { KPIS, Port } from "@/lib/map/types";
 import ModalWindow from "./ModalWindow/ModalWindow";
 import { createCurvePath } from "@/lib/map/polylinesCurves";
 import { getPortPaths } from "@/lib/map/getPortPath";
-import { findHub } from "@/lib/map/ports";
+import { findHub, partnersOf } from "@/lib/map/ports";
 import Loader from "./Loader";
+import { PortSummary } from "./Marker/MarkerCard";
+import { FALLBACK_PIN_COLOR } from "./Marker/PortPin";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 // India center and coordinates
 const DEFAULT_ZOOM = 5;
@@ -111,6 +115,30 @@ const MapBoard = ({
           hoveredPort={hoveredPort}
         />
       </Map>
+      {/* Small screens show the selected port here instead of beside its marker. */}
+      {clickedPort ? (
+        <div className='fixed inset-x-3 bottom-8 z-10 rounded-xl bg-white p-3 shadow-xl sm:hidden'>
+          <PortSummary
+            port={clickedPort}
+            color={
+              findHub(clickedPort, ports)?.polyline_color || FALLBACK_PIN_COLOR
+            }
+            partnerCount={partnersOf(clickedPort, ports).length}
+            isSelected
+            onOpenDetails={setDetailsPort}
+          />
+          <button
+            type='button'
+            aria-label='Clear selection'
+            onClick={handleMapClick}
+            className='absolute top-2 right-2 flex size-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100'>
+            <FontAwesomeIcon
+              icon={faXmark}
+              className='size-4'
+            />
+          </button>
+        </div>
+      ) : null}
       {detailsPort ? (
         <ModalWindow
           port={detailsPort}
