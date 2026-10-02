@@ -129,8 +129,7 @@ const NetworkLines = ({
   ));
 
 /**
- * The routes of the selected or hovered port: a soft glow, the line itself, and
- * dots running along it from the hub out to the partner port.
+ * The routes of the selected or hovered port: a soft glow and the line itself.
  */
 const HighlightedLines = ({ routes }: { routes: Route[] }) =>
   routes.map(({ key, path, color }) => (
@@ -144,19 +143,6 @@ const HighlightedLines = ({ routes }: { routes: Route[] }) =>
         positions={path}
         interactive={false}
         pathOptions={{ color, opacity: 1, weight: 3 }}
-      />
-      <Polyline
-        positions={path}
-        interactive={false}
-        // Leaflet reads class names only when it creates a line.
-        className='route-flow'
-        pathOptions={{
-          color: "white",
-          opacity: 0.85,
-          weight: 3,
-          dashArray: "1 19",
-          lineCap: "round",
-        }}
       />
     </Fragment>
   ));

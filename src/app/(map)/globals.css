@@ -196,20 +196,6 @@
 }
 
 /*
-  Dots running along a highlighted route, from the hub out to the partner
-  port. One step is the line's dash pattern ("1 19"), so the loop is seamless.
-*/
-.route-flow {
-  animation: route-flow 1s linear infinite;
-}
-
-@keyframes route-flow {
-  to {
-    stroke-dashoffset: -20;
-  }
-}
-
-/*
   The trade network drawing itself out from the hubs when the map opens. Each
   line is measured as 1 long (MapBoard sets pathLength), so a single dash
   covers it and sliding that dash in reveals it.
@@ -229,7 +215,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .route-flow,
   .route-draw {
     animation: none;
   }
