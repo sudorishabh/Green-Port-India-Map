@@ -32,6 +32,7 @@ import { useUpdatePortMutation } from "@/lib/portal/features/ports/portsApiSlice
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
 import { HEX_COLOR, MAX_PORT_CAPACITY } from "@/lib/schemas/port";
+import { PortMapPreview } from "./port-map-preview";
 
 /**
  * A form number from an input or the API, which returns decimal columns as
@@ -131,15 +132,32 @@ export function PortForm({
     defaultValues: toFormValues(editingPort, portType),
   });
 
-  const [watchedPortLocationType, watchedIndianPortName, watchedPolylineColor] =
-    useWatch({
-      control,
-      name: ["port_location_type", "ind_port_name", "polyline_color"],
-    });
+  const [
+    watchedPortLocationType,
+    watchedIndianPortName,
+    watchedPolylineColor,
+    watchedLat,
+    watchedLng,
+  ] = useWatch({
+    control,
+    name: ["port_location_type", "ind_port_name", "polyline_color", "lat", "lng"],
+  });
 
   const selectedIndianPort = indianPorts.find(
     (port) => port.name === watchedIndianPortName
   );
+
+  // Only coordinates that pass validation are shown on the map.
+  const position =
+    Math.abs(watchedLat) <= 90 && Math.abs(watchedLng) <= 180
+      ? { lat: watchedLat, lng: watchedLng }
+      : undefined;
+
+  const handlePositionChange = ({ lat, lng }: google.maps.LatLngLiteral) => {
+    const options = { shouldDirty: true, shouldValidate: true };
+    setValue("lat", lat, options);
+    setValue("lng", lng, options);
+  };
 
   // Start from the saved port, or a blank form, every time the dialog opens.
   // Refetches of the port list while it is open must not wipe the user's edits.
@@ -300,43 +318,67 @@ export function PortForm({
 
               <Separator />
 
-              {/* Section 2: Geographical Coordinates */}
+              {/* Section 2: Location */}
               <section>
-                <h3 className='text-lg font-medium mb-4'>
-                  Geographical Coordinates
-                </h3>
-                <div className='grid md:grid-cols-2 gap-6'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='lat'>Latitude *</Label>
-                    <Input
-                      id='lat'
-                      type='number'
-                      step='any'
-                      {...register("lat", coordinateRules("Latitude", 90))}
-                      placeholder='E.g., 1.290270'
-                    />
-                    {errors.lat && (
-                      <p className='text-sm text-destructive'>
-                        {errors.lat.message}
-                      </p>
-                    )}
+                <h3 className='text-lg font-medium mb-1'>Location</h3>
+                <p className='text-sm text-muted-foreground mb-4'>
+                  Click the map or drag the pin to place the port, or type its
+                  coordinates.
+                </p>
+                <div className='grid gap-6 md:grid-cols-[1fr_2fr]'>
+                  <div className='space-y-4'>
+                    <div className='space-y-2'>
+                      <Label htmlFor='lat'>Latitude *</Label>
+                      <Input
+                        id='lat'
+                        type='number'
+                        step='any'
+                        {...register("lat", coordinateRules("Latitude", 90))}
+                        placeholder='E.g., 1.290270'
+                      />
+                      {errors.lat && (
+                        <p className='text-sm text-destructive'>
+                          {errors.lat.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className='space-y-2'>
+                      <Label htmlFor='lng'>Longitude *</Label>
+                      <Input
+                        id='lng'
+                        type='number'
+                        step='any'
+                        {...register("lng", coordinateRules("Longitude", 180))}
+                        placeholder='E.g., 103.851959'
+                      />
+                      {errors.lng && (
+                        <p className='text-sm text-destructive'>
+                          {errors.lng.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className='space-y-2'>
-                    <Label htmlFor='lng'>Longitude *</Label>
-                    <Input
-                      id='lng'
-                      type='number'
-                      step='any'
-                      {...register("lng", coordinateRules("Longitude", 180))}
-                      placeholder='E.g., 103.851959'
-                    />
-                    {errors.lng && (
-                      <p className='text-sm text-destructive'>
-                        {errors.lng.message}
-                      </p>
-                    )}
-                  </div>
+                  <PortMapPreview
+                    position={position}
+                    onPositionChange={handlePositionChange}
+                    initialView={
+                      editingPort
+                        ? [
+                            {
+                              lat: Number(editingPort.lat),
+                              lng: Number(editingPort.lng),
+                            },
+                          ]
+                        : []
+                    }
+                    color={
+                      (watchedPortLocationType === "Indian"
+                        ? watchedPolylineColor
+                        : selectedIndianPort?.polyline_color) || undefined
+                    }
+                  />
                 </div>
               </section>
 
