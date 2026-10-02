@@ -152,8 +152,8 @@ export default function PortsPage() {
     searchValue: string,
     onSearchChange: (value: string) => void
   ) => (
-    <Card className='shadow-md border-border/40 rounded-lg overflow-hidden bg-card'>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 p-4 bg-muted/50 border-b'>
+    <Card className='gap-0 py-0 shadow-md border-border/40 rounded-lg overflow-hidden bg-card'>
+      <CardHeader className='flex flex-col gap-3 space-y-0 border-b bg-muted/50 p-4 sm:flex-row sm:items-center sm:justify-between'>
         <div className='flex items-center gap-3'>
           {/* Icon based on title */}
           {title === "Indian Ports" ? (
@@ -171,22 +171,21 @@ export default function PortsPage() {
             }`}>
             {ports.length}
           </Badge>
-          <CardDescription className='hidden md:block text-sm pl-2'>
+          <CardDescription className='hidden xl:block text-sm pl-2'>
             {description}
           </CardDescription>
         </div>
-        <div className='relative w-full max-w-xs'>
+        <div className='relative w-full sm:max-w-xs'>
           <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
           <Input
-            placeholder='Search by name, city, country...' // More descriptive placeholder
+            placeholder='Search by name, city, country...'
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            className='pl-9 h-9 rounded-md' // Adjusted padding and height
+            className='pl-9 h-9 rounded-md'
           />
         </div>
       </CardHeader>
       <CardContent className='p-0'>
-        {/* Use Table component directly */}
         <Table>
           <TableHeader className='bg-muted/30'>
             <TableRow>
@@ -282,11 +281,11 @@ export default function PortsPage() {
   );
 
   return (
-    <div className='container mx-auto py-8 px-4 md:px-6 lg:px-8'>
+    <div className='mx-auto max-w-7xl'>
       {/* Page Header */}
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
+      <div className='mb-6 flex flex-col gap-4 sm:mb-8 md:flex-row md:items-center md:justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight text-foreground'>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground sm:text-3xl'>
             Ports Management
           </h1>
           <p className='text-muted-foreground mt-1'>
@@ -294,7 +293,7 @@ export default function PortsPage() {
           </p>
         </div>
 
-        <div className='flex space-x-3 mt-4 md:mt-0'>
+        <div className='flex flex-wrap gap-2 sm:gap-3'>
           <Button
             variant='outline'
             className='border-emerald-500 text-emerald-700 hover:bg-emerald-50 cursor-pointer hover:text-emerald-800'
@@ -339,7 +338,7 @@ export default function PortsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='flex justify-center space-x-3 mt-2'>
+            <div className='flex flex-wrap justify-center gap-3 mt-2'>
               <Button
                 variant='outline'
                 className='border-emerald-500 text-emerald-700 hover:bg-emerald-50 cursor-pointer hover:text-emerald-800'
@@ -361,7 +360,7 @@ export default function PortsPage() {
         <Tabs
           defaultValue='indian'
           className='w-full mt-8'>
-          <TabsList className='grid w-full sm:w-[400px] grid-cols-2 mb-6 bg-muted p- rounded-lg'>
+          <TabsList className='mb-6 grid w-full grid-cols-2 rounded-lg bg-muted sm:w-[400px]'>
             <TabsTrigger
               value='indian'
               className='data-[state=active]:bg-background data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm  rounded-md cursor-pointer text-sm font-medium transition-all flex items-center justify-center gap-2'>

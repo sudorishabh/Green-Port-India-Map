@@ -132,7 +132,7 @@ export default function KpisPage() {
 
   if (getKpisError) {
     return (
-      <div className='container mx-auto py-8 px-4 md:px-6 lg:px-8 text-red-600'>
+      <div className='mx-auto max-w-7xl text-red-600'>
         Error loading KPIs. Please try again later.
       </div>
     );
@@ -141,10 +141,10 @@ export default function KpisPage() {
   const isLoadingForm = isAddingKpi || isUpdatingKpi;
 
   return (
-    <div className='container mx-auto py-8 px-4 md:px-6 lg:px-8'>
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
+    <div className='mx-auto max-w-7xl'>
+      <div className='mb-6 flex flex-col gap-4 sm:mb-8 md:flex-row md:items-center md:justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight text-foreground'>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground sm:text-3xl'>
             KPI Management
           </h1>
           <p className='text-muted-foreground mt-1'>
@@ -153,7 +153,7 @@ export default function KpisPage() {
         </div>
         <Button
           variant='outline'
-          className='border-sky-500 cursor-pointer text-sky-700 hover:bg-sky-50 hover:text-sky-800 mt-4 md:mt-0'
+          className='self-start border-sky-500 cursor-pointer text-sky-700 hover:bg-sky-50 hover:text-sky-800 md:self-auto'
           onClick={handleAddKpi}
           disabled={isLoadingKpis || isAddingKpi}>
           <PlusCircle className='mr-2 h-4 w-4 cursor-pointer' />
@@ -188,8 +188,8 @@ export default function KpisPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className='shadow-md border-border/40 rounded-lg overflow-hidden bg-card'>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 p-4 bg-muted/50 border-b'>
+        <Card className='gap-0 py-0 shadow-md border-border/40 rounded-lg overflow-hidden bg-card'>
+          <CardHeader className='flex flex-col gap-3 space-y-0 border-b bg-muted/50 p-4 sm:flex-row sm:items-center sm:justify-between'>
             <div className='flex items-center gap-3'>
               <BarChart2 className='h-5 w-5 text-sky-700' />
               <CardTitle className='text-lg font-semibold'>
@@ -200,11 +200,11 @@ export default function KpisPage() {
                 className='rounded-full px-2.5 py-0.5 text-xs font-semibold bg-sky-100 text-sky-800 border-sky-200'>
                 {filteredKpis.length}
               </Badge>
-              <CardDescription className='hidden md:block text-sm pl-2'>
+              <CardDescription className='hidden xl:block text-sm pl-2'>
                 Track and manage KPIs and targets
               </CardDescription>
             </div>
-            <div className='relative w-full max-w-xs'>
+            <div className='relative w-full sm:max-w-xs'>
               <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
               <Input
                 placeholder='Search by category or KPI...'
