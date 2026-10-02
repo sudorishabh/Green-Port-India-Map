@@ -1,3 +1,5 @@
+import type { LatLngLiteral } from "leaflet";
+
 /**
  * Points along a quadratic Bézier from `start` to `end`, bowed `curveFactor`
  * degrees of latitude away from the straight line.
@@ -8,8 +10,8 @@
  * edge and coming back in on the west.
  */
 export function createCurvePath(
-  start: google.maps.LatLngLiteral,
-  end: google.maps.LatLngLiteral,
+  start: LatLngLiteral,
+  end: LatLngLiteral,
   curveFactor: number
 ) {
   const controlPoint = {
@@ -22,7 +24,7 @@ export function createCurvePath(
     20,
     Math.ceil(Math.hypot(end.lat - start.lat, end.lng - start.lng))
   );
-  const path: google.maps.LatLngLiteral[] = [];
+  const path: LatLngLiteral[] = [];
 
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;

@@ -34,6 +34,7 @@ import { getApiErrorMessage } from "@/lib/portal/api-errors";
 import { HEX_COLOR, MAX_PORT_CAPACITY } from "@/lib/schemas/port";
 import { PortMapPreview } from "./port-map-preview";
 import { createCurvePath } from "@/lib/map/polylinesCurves";
+import type { LatLngLiteral } from "leaflet";
 
 /**
  * A form number from an input or the API, which returns decimal columns as
@@ -231,7 +232,7 @@ export function PortForm({
           ),
         ];
 
-  const handlePositionChange = ({ lat, lng }: google.maps.LatLngLiteral) => {
+  const handlePositionChange = ({ lat, lng }: LatLngLiteral) => {
     const options = { shouldDirty: true, shouldValidate: true };
     setValue("lat", lat, options);
     setValue("lng", lng, options);
