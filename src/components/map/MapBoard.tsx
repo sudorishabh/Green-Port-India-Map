@@ -5,13 +5,20 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Map, Polyline, useMap } from "@vis.gl/react-google-maps";
+import {
+  ControlPosition,
+  Map,
+  Polyline,
+  useMap,
+} from "@vis.gl/react-google-maps";
 import Marker from "@/components/map/Marker/Marker";
 import { KPIS, Port } from "@/lib/map/types";
 import ModalWindow from "./ModalWindow/ModalWindow";
+import { frameRoutes, FramePadding } from "@/lib/map/frame";
 import { getRoutes, Route } from "@/lib/map/routes";
 import { findHub, partnersOf } from "@/lib/map/ports";
 import Loader from "./Loader";
+import PortsPanel, { PANEL_WIDTH } from "./PortsPanel";
 import { PortSummary } from "./Marker/MarkerCard";
 import { FALLBACK_PIN_COLOR } from "./Marker/PortPin";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -47,14 +54,30 @@ const useMinZoom = () =>
     () => MIN_ZOOM
   );
 
+const useIsPhone = () =>
+  useSyncExternalStore(
+    subscribeToResize,
+    () => window.innerWidth < 640,
+    () => false
+  );
+
+/** Half the width of the card above a selected marker, plus a margin. */
+const CARD_ROOM = 136;
+
 /**
- * Room to leave around framed routes: on phones for the map type control and
- * the selection sheet, elsewhere for the card above the selected marker.
+ * Room to leave around framed routes: on phones for the collapsed guide and the
+ * selection sheet, elsewhere for the card above the selected marker and, when
+ * open, the guide panel.
  */
-function framePadding(): google.maps.Padding {
-  return window.innerWidth < 640
-    ? { top: 72, right: 24, bottom: 200, left: 24 }
-    : { top: 200, right: 72, bottom: 48, left: 72 };
+function framePadding(isPhone: boolean, isPanelOpen: boolean): FramePadding {
+  return isPhone
+    ? { top: 120, right: 24, bottom: 200, left: 24 }
+    : {
+        top: 200,
+        right: CARD_ROOM,
+        bottom: 48,
+        left: isPanelOpen ? 12 + PANEL_WIDTH + CARD_ROOM : CARD_ROOM,
+      };
 }
 
 const RouteLines = ({ routes }: { routes: Route[] }) =>
@@ -81,8 +104,13 @@ const MapBoard = ({
   const [clickedPort, setClickedPort] = useState<Port | null>(null);
   const [hoveredPort, setHoveredPort] = useState<Port | null>(null);
 
+  // Null until toggled: the guide starts open, except on phones.
+  const [panelOpen, setPanelOpen] = useState<boolean | null>(null);
+
   const map = useMap();
   const minZoom = useMinZoom();
+  const isPhone = useIsPhone();
+  const isPanelOpen = panelOpen ?? !isPhone;
 
   const selectedRoutes = useMemo(
     () => getRoutes(clickedPort, ports),
@@ -100,21 +128,32 @@ const MapBoard = ({
   // Frame a newly selected port with all of its routes.
   useEffect(() => {
     if (!map || !clickedPort) return;
-
-    const points = selectedRoutes.flatMap(({ path }) => path);
-    if (points.length === 0) {
-      map.panTo({ lat: +clickedPort.lat, lng: +clickedPort.lng });
-      return;
-    }
-
-    const bounds = new google.maps.LatLngBounds();
-    points.forEach((point) => bounds.extend(point));
-    map.fitBounds(bounds, framePadding());
-  }, [map, clickedPort, selectedRoutes]);
+    frameRoutes(
+      map,
+      { lat: +clickedPort.lat, lng: +clickedPort.lng },
+      selectedRoutes.flatMap(({ path }) => path),
+      framePadding(isPhone, isPanelOpen),
+      minZoom
+    );
+  }, [map, clickedPort, selectedRoutes, isPhone, isPanelOpen, minZoom]);
 
   const handleMapClick = useCallback(() => {
     setClickedPort(null);
   }, []);
+
+  // A second selection of the same port opens its details. On phones the
+  // guide closes so the map and the selected port can be seen.
+  const handleSelectPort = useCallback(
+    (port: Port) => {
+      if (port.port_id === clickedPort?.port_id) {
+        setDetailsPort(port);
+        return;
+      }
+      setClickedPort(port);
+      if (isPhone) setPanelOpen(false);
+    },
+    [clickedPort, isPhone]
+  );
 
   if (isLoading) return <Loader />;
 
@@ -127,18 +166,29 @@ const MapBoard = ({
         defaultZoom={DEFAULT_ZOOM}
         minZoom={minZoom}
         restriction={WORLD_BOUNDS}
+        // The guide panel takes the top left, and phones have no room for it.
+        mapTypeControl={!isPhone}
+        mapTypeControlOptions={{ position: ControlPosition.TOP_RIGHT }}
+        streetViewControl={false}
         fullscreenControl={false}>
         <RouteLines routes={selectedRoutes} />
         <RouteLines routes={hoveredRoutes} />
         <Marker
           ports={ports}
-          onOpenDetails={setDetailsPort}
-          setClickedPort={setClickedPort}
+          onSelect={handleSelectPort}
           clickedPort={clickedPort}
           setHoveredPort={setHoveredPort}
           hoveredPort={hoveredPort}
         />
       </Map>
+      <PortsPanel
+        ports={ports}
+        selectedPort={clickedPort}
+        onSelect={handleSelectPort}
+        onHover={setHoveredPort}
+        isOpen={isPanelOpen}
+        onOpenChange={setPanelOpen}
+      />
       {/* Small screens show the selected port here instead of beside its marker. */}
       {clickedPort ? (
         <div className='fixed inset-x-3 bottom-8 z-10 rounded-xl bg-white p-3 shadow-xl sm:hidden'>

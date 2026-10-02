@@ -1,5 +1,5 @@
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import MarkerCard from "./MarkerCard";
 import { Port } from "@/lib/map/types";
 import PortPin, { FALLBACK_PIN_COLOR } from "./PortPin";
@@ -7,8 +7,8 @@ import { isHub } from "@/lib/map/ports";
 
 interface MarkersProps {
   ports: Port[];
-  onOpenDetails: (port: Port) => void;
-  setClickedPort: (port: Port | null) => void;
+  /** Selects a port; selecting the selected port again opens its details. */
+  onSelect: (port: Port) => void;
   clickedPort: Port | null;
   setHoveredPort: (port: Port | null) => void;
   hoveredPort: Port | null;
@@ -16,8 +16,7 @@ interface MarkersProps {
 
 const Markers: React.FC<MarkersProps> = ({
   ports,
-  onOpenDetails,
-  setClickedPort,
+  onSelect,
   clickedPort,
   setHoveredPort,
   hoveredPort,
@@ -36,15 +35,6 @@ const Markers: React.FC<MarkersProps> = ({
     }
     return counts;
   }, [ports]);
-
-  const handleClickMarker = useCallback(
-    (port: Port) => {
-      // A second click on the selected port opens its details.
-      if (clickedPort?.port_id === port.port_id) onOpenDetails(port);
-      else setClickedPort(port);
-    },
-    [clickedPort, onOpenDetails, setClickedPort]
-  );
 
   return (
     <>
@@ -67,7 +57,7 @@ const Markers: React.FC<MarkersProps> = ({
             anchorLeft='-50%'
             anchorTop='-50%'
             zIndex={isHighlighted ? 100 : isHub(port) ? 2 : 1}
-            onClick={() => handleClickMarker(port)}>
+            onClick={() => onSelect(port)}>
             <span
               onMouseEnter={() => setHoveredPort(port)}
               onMouseLeave={() => setHoveredPort(null)}>
@@ -84,7 +74,7 @@ const Markers: React.FC<MarkersProps> = ({
                 color={color}
                 partnerCount={partnerCounts.get(port.name) ?? 0}
                 isSelected={isSelected}
-                onOpenDetails={onOpenDetails}
+                onOpenDetails={onSelect}
               />
             )}
           </AdvancedMarker>

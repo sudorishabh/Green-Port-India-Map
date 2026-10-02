@@ -11,6 +11,8 @@ interface Props {
   /** Route colour of the port's hub; partners share their hub's colour. */
   color: string | undefined;
   isHighlighted: boolean;
+  /** Smaller, for lists beside the map. */
+  compact?: boolean;
 }
 
 /**
@@ -18,14 +20,14 @@ interface Props {
  * in the hub's route colour so each trade network reads as one group. Inactive
  * ports are grey.
  */
-const PortPin = ({ port, color, isHighlighted }: Props) => {
+const PortPin = ({ port, color, isHighlighted, compact = false }: Props) => {
   const hub = isHub(port);
   const active = isActive(port);
 
   return (
     <span
       className={`flex items-center justify-center rounded-full border-2 border-white shadow-md transition-transform duration-150 ${
-        hub ? "size-8" : "size-4"
+        hub ? (compact ? "size-6" : "size-8") : compact ? "size-3" : "size-4"
       } ${isHighlighted ? "scale-125" : ""} ${active ? "" : "opacity-70"}`}
       style={{
         backgroundColor: active
@@ -35,7 +37,7 @@ const PortPin = ({ port, color, isHighlighted }: Props) => {
       {hub && (
         <FontAwesomeIcon
           icon={faLeaf}
-          className='size-4 text-white'
+          className={`text-white ${compact ? "size-3" : "size-4"}`}
         />
       )}
     </span>
