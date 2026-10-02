@@ -1,10 +1,10 @@
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import MarkerCard from "./MarkerCard";
 import { Port } from "@/lib/map/types";
 import HoveredCardPortal from "./HoveredCardPortal";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLeaf } from "@fortawesome/free-solid-svg-icons";
+import PortPin from "./PortPin";
+import { isHub } from "@/lib/map/ports";
 
 interface PortalInfo {
   port: Port | null;
@@ -49,6 +49,12 @@ const Markers: React.FC<MarkersProps> = ({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const hubColors = useMemo(
+    () =>
+      new Map(ports.filter(isHub).map((hub) => [hub.name, hub.polyline_color])),
+    [ports]
+  );
 
   const handleClickMarker = useCallback(
     (port: Port) => {
@@ -98,25 +104,32 @@ const Markers: React.FC<MarkersProps> = ({
       />
 
       {ports?.map((port) => {
-     
         const position = { lat: +port.lat, lng: +port.lng };
 
-        const isActive =
+        const isHighlighted =
           clickedPort?.port_id === port.port_id ||
           hoveredPort?.port_id === port.port_id;
+        const hubName = isHub(port) ? port.name : port.ind_port_name;
 
         return (
           <AdvancedMarker
             key={port.port_id}
             position={position}
-            zIndex={isActive ? 100 : 1}
+            title={port.name}
+            // Centred, so route lines start and end in the middle of the pin.
+            anchorLeft='-50%'
+            anchorTop='-50%'
+            zIndex={isHighlighted ? 100 : isHub(port) ? 2 : 1}
             onClick={() => handleClickMarker(port)}>
-            <FontAwesomeIcon
-              icon={faLeaf}
+            <span
               onMouseEnter={(e) => handleHoverMarker(port, e)}
-              onMouseLeave={() => handleHoverMarker(null)}
-              className='size-8 opacity-75 hover:opacity-100 fill-green-800 hover:fill-green-800 hover:text-green-800 text-green-800'
-            />
+              onMouseLeave={() => handleHoverMarker(null)}>
+              <PortPin
+                port={port}
+                color={hubColors.get(hubName ?? "")}
+                isHighlighted={isHighlighted}
+              />
+            </span>
 
             {clickedPort?.port_id === port.port_id && (
               <MarkerCard
