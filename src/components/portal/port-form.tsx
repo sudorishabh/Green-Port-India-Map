@@ -288,9 +288,9 @@ export function PortForm({
     <Dialog
       open={isOpen}
       onOpenChange={onClose}>
-      <DialogContent className='sm:max-w-[900px] max-h-[90vh] overflow-y-auto p-6 bg-gradient-to-br from-background to-muted'>
+      <DialogContent className='sm:max-w-[900px] max-h-[90dvh] overflow-y-auto p-4 sm:p-6 bg-gradient-to-br from-background to-muted'>
         <DialogHeader>
-          <DialogTitle className='text-2xl font-semibold tracking-tight'>
+          <DialogTitle className='text-xl font-semibold tracking-tight sm:text-2xl'>
             {getDialogTitle()}
           </DialogTitle>
           <DialogDescription className='text-muted-foreground'>

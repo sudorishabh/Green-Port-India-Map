@@ -105,9 +105,9 @@ export function KpiForm({
     <Dialog
       open={isOpen}
       onOpenChange={onClose}>
-      <DialogContent className='sm:max-w-[750px] max-h-[90vh] overflow-y-auto p-6 bg-gradient-to-br from-background to-muted'>
+      <DialogContent className='sm:max-w-[750px] max-h-[90dvh] overflow-y-auto p-4 sm:p-6 bg-gradient-to-br from-background to-muted'>
         <DialogHeader>
-          <DialogTitle className='text-2xl font-semibold tracking-tight'>
+          <DialogTitle className='text-xl font-semibold tracking-tight sm:text-2xl'>
             {isKpi ? "Edit KPI" : "Add New KPI"}
           </DialogTitle>
           <DialogDescription className='text-muted-foreground'>
@@ -121,7 +121,7 @@ export function KpiForm({
               onSubmit={handleFormSubmitInternal}
               className='grid gap-6'>
               {/* Section 1: Basic KPI Information */}
-              <section className='p-5 border rounded-lg bg-card/50'>
+              <section className='p-4 border rounded-lg bg-card/50 sm:p-5'>
                 <h3 className='text-lg font-medium mb-4 flex items-center'>
                   <Badge className='mr-2 bg-primary/20 text-primary hover:bg-primary/30 border-none'>
                     1
@@ -161,7 +161,7 @@ export function KpiForm({
               </section>
 
               {/* Section 2: Target Information */}
-              <section className='p-5 border rounded-lg bg-card/50'>
+              <section className='p-4 border rounded-lg bg-card/50 sm:p-5'>
                 <h3 className='text-lg font-medium mb-4 flex items-center'>
                   <Badge className='mr-2 bg-primary/20 text-primary hover:bg-primary/30 border-none'>
                     2
@@ -216,7 +216,7 @@ export function KpiForm({
               </section>
 
               {/* Section 3: KPI Target Links */}
-              <section className='p-5 border rounded-lg bg-card/50'>
+              <section className='p-4 border rounded-lg bg-card/50 sm:p-5'>
                 <div className='flex justify-between items-center mb-4'>
                   <h3 className='text-lg font-medium flex items-center'>
                     <Badge className='mr-2 bg-primary/20 text-primary hover:bg-primary/30 border-none'>

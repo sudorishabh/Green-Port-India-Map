@@ -159,9 +159,10 @@ const InitiativeForm = ({
       onOpenChange={(isOpen) => {
         if (!isOpen) handleCloseInitiativeDialog();
       }}>
-      <DialogContent className='sm:max-w-6xl max-h-[80vh] overflow-y-auto'>
+      <DialogContent className='max-h-[90dvh] overflow-y-auto p-4 sm:max-w-6xl sm:p-6'>
         <DialogHeader>
-          <DialogTitle>
+          {/* Clear of the close button in the corner. */}
+          <DialogTitle className='pr-6 leading-snug'>
             {portName ? `Initiatives for ${portName}` : "Port Initiatives"}
           </DialogTitle>
         </DialogHeader>
@@ -177,8 +178,8 @@ const InitiativeForm = ({
                 <div
                   key={kpiData.kpi_id}
                   className='border rounded-lg p-4 bg-gray-50'>
-                  <div className='flex justify-between items-center mb-3'>
-                    <div>
+                  <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+                    <div className='min-w-0'>
                       <h3 className='text-lg font-semibold text-sky-800'>
                         {kpiData.kpi}
                       </h3>
@@ -193,7 +194,7 @@ const InitiativeForm = ({
                       </div>
                     </div>
                     <Button
-                      className='bg-sky-700 hover:bg-sky-800 cursor-pointer'
+                      className='shrink-0 self-start bg-sky-700 hover:bg-sky-800 cursor-pointer'
                       size='sm'
                       onClick={() =>
                         handleOpenAddInitiativeForm(kpiData.kpi_id)
@@ -206,16 +207,17 @@ const InitiativeForm = ({
                       {kpiInitiatives.map((initiative: Initiative) => (
                         <div
                           key={initiative.initiative_id}
-                          className='bg-white p-3 rounded border flex justify-between items-center'>
-                          <div className='flex-1'>
+                          className='flex flex-col gap-3 rounded border bg-white p-3 sm:flex-row sm:items-center sm:justify-between'>
+                          <div className='min-w-0 flex-1'>
                             <h4 className='font-medium'>
                               {initiative.initiative}
                             </h4>
-                            <p className='text-sm text-gray-700'>
+                            {/* Long URLs would otherwise widen the dialog. */}
+                            <p className='text-sm break-all text-gray-700'>
                               {initiative.initiative_url}
                             </p>
                           </div>
-                          <div className='flex gap-2'>
+                          <div className='flex shrink-0 gap-2'>
                             <Button
                               className='bg-sky-100 text-sky-800 hover:bg-sky-200 cursor-pointer'
                               size='sm'
@@ -246,7 +248,7 @@ const InitiativeForm = ({
             })}
           </div>
         ) : (
-          <div className='border rounded-lg p-6 bg-white'>
+          <div className='border rounded-lg p-4 bg-white sm:p-6'>
             <DialogHeader>
               <DialogTitle>
                 {editingInitiative ? "Edit" : "Add New"} Initiative for{" "}
