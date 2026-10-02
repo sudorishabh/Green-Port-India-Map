@@ -2,7 +2,7 @@
 
 A single Next.js app containing:
 
-- **Trade route map** (`/`): the public Google Maps view of Indian ports, their trade routes, KPIs and green initiatives.
+- **Trade route map** (`/`): the public Leaflet map of Indian ports, their trade routes, KPIs and green initiatives. Street tiles come from OpenStreetMap (or CARTO, with a key), redrawn with India's official boundaries by [`@india-boundary-corrector/leaflet-layer`](https://github.com/ramSeraph/india_boundary_corrector); satellite imagery comes from Esri.
 - **Admin portal** (`/portal`): sign in to manage ports, KPIs, target links and initiatives.
 - **API** (`/api/*`): Route Handlers backed by PostgreSQL (Drizzle ORM), replacing the old Express server.
 
@@ -39,7 +39,7 @@ See [`.env.example`](.env.example).
 
 | Variable                                               | Used by | Notes                                                               |
 | ------------------------------------------------------ | ------- | ------------------------------------------------------------------- |
-| `NEXT_PUBLIC_GOOGLE_MAP_API`, `NEXT_PUBLIC_MAP_ID`     | Map     | Exposed to the browser                                              |
+| `NEXT_PUBLIC_CARTO_KEY`                                | Map     | Optional, exposed to the browser. Blank uses OpenStreetMap's tiles  |
 | `DATABASE_URL`                                         | API     | PostgreSQL connection string                                        |
 | `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`          | API     | JWT signing secrets for the portal session cookies                  |
 
@@ -49,6 +49,8 @@ See [`.env.example`](.env.example).
 public/
   ports/                Placeholder port pictures, assigned by port id
   flags/                Country flags, matched by country name
+  map/                  India boundary corrections (PMTiles), copied from
+                        @india-boundary-corrector/data; recopy after updating it
 src/
   app/
     (map)/              Root layout + page for the public map (/)

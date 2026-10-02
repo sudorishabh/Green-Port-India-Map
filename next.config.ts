@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 // Same defaults helmet applied to the old Express API (CSP disabled).
-// Scoped to /api: `Referrer-Policy: no-referrer` on pages would break the
-// referrer-restricted Google Maps key.
+// Scoped to /api: `Referrer-Policy: no-referrer` on pages would stop the
+// Referer header that OpenStreetMap's tile servers require of websites.
 const apiSecurityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },

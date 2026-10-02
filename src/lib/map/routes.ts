@@ -1,3 +1,4 @@
+import type { LatLngLiteral } from "leaflet";
 import { getPortPaths } from "./getPortPath";
 import { createCurvePath } from "./polylinesCurves";
 import { Port } from "./types";
@@ -5,7 +6,7 @@ import { Port } from "./types";
 export interface Route {
   /** The partner port's name, unique among one port's routes. */
   key: string;
-  path: google.maps.LatLngLiteral[];
+  path: LatLngLiteral[];
   color: string;
 }
 

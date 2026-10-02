@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Layered, so utilities still win over Leaflet's defaults inside the map. */
+@import "leaflet/dist/leaflet.css" layer(base);
 
 @custom-variant dark (&:is(.dark *));
 
