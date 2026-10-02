@@ -9,8 +9,9 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Admin Portal",
-  description: "Manage Ports and KPIs",
+  title: "Green Ports India Map Admin",
+  description:
+    "Manage the ports, KPIs and green initiatives shown on Green Ports India Map.",
 };
 
 // Root layout for /portal: the admin portal has its own document, styles and

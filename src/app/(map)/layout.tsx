@@ -9,8 +9,9 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Indian Port Trade Route Map",
-  description: "Indian Port Trade Route Map",
+  title: "Green Ports India Map",
+  description:
+    "An interactive map of India's ports, their trade routes and green shipping progress.",
 };
 
 export default function RootLayout({
