@@ -68,9 +68,9 @@ export const PortSummary: FC<SummaryProps> = ({
 };
 
 /**
- * Card above a hovered or selected marker. On small screens the selected port
- * is shown in a sheet at the bottom of the map instead, as a card beside the
- * marker would run off the screen.
+ * Card above a hovered or selected marker. On phones and short screens the
+ * selected port is shown in a sheet at the bottom of the map instead, as a card
+ * beside the marker would run off the screen.
  */
 const MarkerCard: FC<SummaryProps> = (props) => {
   const [flip, setFlip] = useState(false);
@@ -87,7 +87,7 @@ const MarkerCard: FC<SummaryProps> = (props) => {
       ref={cardRef}
       className={`absolute left-1/2 w-60 -translate-x-1/2 cursor-default rounded-xl bg-white p-3 text-left shadow-xl ${
         flip ? "top-full mt-3" : "bottom-full mb-3"
-      } ${props.isSelected ? "hidden sm:block" : "pointer-events-none"}`}>
+      } ${props.isSelected ? "hidden roomy:block" : "pointer-events-none"}`}>
       <PortSummary {...props} />
     </div>
   );

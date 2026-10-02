@@ -9,6 +9,14 @@
 }
 
 /*
+  Screens with room for floating cards and windows. Phones, and landscape
+  phones too short for them, get bottom sheets and full-screen views instead.
+  MapBoard's useIsCompact matches the opposite of roomy.
+*/
+@custom-variant roomy (@media (width >= 40rem) and (height >= 35rem));
+@custom-variant short (@media (height < 35rem));
+
+/*
   Tailwind v4 emits utilities inside a native CSS `@layer`, and unlayered
   styles always beat layered ones. These resets live in `@layer base` so
   utilities (p-*, m-*, h-*, inline-block, ...) can still override them,

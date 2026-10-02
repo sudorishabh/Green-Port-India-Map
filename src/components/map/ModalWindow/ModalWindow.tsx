@@ -27,7 +27,8 @@ const ModalWindow = ({ port, hub, kpis, onClose }: Props) => {
       }}>
       <Dialog.Portal>
         <Dialog.Overlay className='fixed inset-0 z-50 bg-black/55' />
-        <Dialog.Content className='fixed inset-0 z-50 flex flex-col overflow-hidden bg-white shadow-2xl sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[85vh] sm:max-h-172 sm:w-[90vw] sm:max-w-6xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl lg:w-[80vw] xl:w-[70vw]'>
+        {/* Full screen on phones and short screens, a centred window elsewhere. */}
+        <Dialog.Content className='fixed inset-0 z-50 flex flex-col overflow-hidden bg-white shadow-2xl roomy:inset-auto roomy:top-1/2 roomy:left-1/2 roomy:h-[85vh] roomy:max-h-172 roomy:w-[90vw] roomy:max-w-6xl roomy:-translate-x-1/2 roomy:-translate-y-1/2 roomy:rounded-2xl roomy:lg:w-[80vw] roomy:xl:w-[70vw]'>
           <header className='flex items-center gap-3 bg-brand px-4 py-3 text-white sm:px-6'>
             {port.flag_url && (
               <img

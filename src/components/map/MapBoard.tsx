@@ -54,10 +54,11 @@ const useMinZoom = () =>
     () => MIN_ZOOM
   );
 
-const useIsPhone = () =>
+/** Phones, and landscape phones too short for floating cards. */
+const useIsCompact = () =>
   useSyncExternalStore(
     subscribeToResize,
-    () => window.innerWidth < 640,
+    () => window.innerWidth < 640 || window.innerHeight < 560,
     () => false
   );
 
@@ -66,18 +67,23 @@ const CARD_ROOM = 136;
 
 /**
  * Room to leave around framed routes: on phones for the collapsed guide and the
- * selection sheet, elsewhere for the card above the selected marker and, when
- * open, the guide panel.
+ * selection sheet below it, on short landscape screens for the guide and the
+ * sheet in the bottom right corner, elsewhere for the card above the selected
+ * marker and, when open, the guide panel.
  */
-function framePadding(isPhone: boolean, isPanelOpen: boolean): FramePadding {
-  return isPhone
-    ? { top: 120, right: 24, bottom: 200, left: 24 }
-    : {
-        top: 200,
-        right: CARD_ROOM,
-        bottom: 48,
-        left: isPanelOpen ? 12 + PANEL_WIDTH + CARD_ROOM : CARD_ROOM,
-      };
+function framePadding(isPanelOpen: boolean): FramePadding {
+  if (window.innerWidth < 640) {
+    return { top: 120, right: 24, bottom: 200, left: 24 };
+  }
+  if (window.innerHeight < 560) {
+    return { top: 110, right: 356, bottom: 24, left: 24 };
+  }
+  return {
+    top: 200,
+    right: CARD_ROOM,
+    bottom: 48,
+    left: isPanelOpen ? 12 + PANEL_WIDTH + CARD_ROOM : CARD_ROOM,
+  };
 }
 
 const RouteLines = ({ routes }: { routes: Route[] }) =>
@@ -104,13 +110,13 @@ const MapBoard = ({
   const [clickedPort, setClickedPort] = useState<Port | null>(null);
   const [hoveredPort, setHoveredPort] = useState<Port | null>(null);
 
-  // Null until toggled: the guide starts open, except on phones.
+  // Null until toggled: the guide starts open, except on compact screens.
   const [panelOpen, setPanelOpen] = useState<boolean | null>(null);
 
   const map = useMap();
   const minZoom = useMinZoom();
-  const isPhone = useIsPhone();
-  const isPanelOpen = panelOpen ?? !isPhone;
+  const isCompact = useIsCompact();
+  const isPanelOpen = panelOpen ?? !isCompact;
 
   const selectedRoutes = useMemo(
     () => getRoutes(clickedPort, ports),
@@ -125,24 +131,25 @@ const MapBoard = ({
     [hoveredPort, clickedPort, ports]
   );
 
-  // Frame a newly selected port with all of its routes.
+  // Frame a newly selected port with all of its routes, and again when the
+  // layout changes, such as when a phone is rotated.
   useEffect(() => {
     if (!map || !clickedPort) return;
     frameRoutes(
       map,
       { lat: +clickedPort.lat, lng: +clickedPort.lng },
       selectedRoutes.flatMap(({ path }) => path),
-      framePadding(isPhone, isPanelOpen),
+      framePadding(isPanelOpen),
       minZoom
     );
-  }, [map, clickedPort, selectedRoutes, isPhone, isPanelOpen, minZoom]);
+  }, [map, clickedPort, selectedRoutes, isCompact, isPanelOpen, minZoom]);
 
   const handleMapClick = useCallback(() => {
     setClickedPort(null);
   }, []);
 
-  // A second selection of the same port opens its details. On phones the
-  // guide closes so the map and the selected port can be seen.
+  // A second selection of the same port opens its details. On compact screens
+  // the guide closes so the map and the selected port can be seen.
   const handleSelectPort = useCallback(
     (port: Port) => {
       if (port.port_id === clickedPort?.port_id) {
@@ -150,9 +157,9 @@ const MapBoard = ({
         return;
       }
       setClickedPort(port);
-      if (isPhone) setPanelOpen(false);
+      if (isCompact) setPanelOpen(false);
     },
-    [clickedPort, isPhone]
+    [clickedPort, isCompact]
   );
 
   if (isLoading) return <Loader />;
@@ -166,8 +173,8 @@ const MapBoard = ({
         defaultZoom={DEFAULT_ZOOM}
         minZoom={minZoom}
         restriction={WORLD_BOUNDS}
-        // The guide panel takes the top left, and phones have no room for it.
-        mapTypeControl={!isPhone}
+        // The guide panel takes the top left, and compact screens have no room.
+        mapTypeControl={!isCompact}
         mapTypeControlOptions={{ position: ControlPosition.TOP_RIGHT }}
         streetViewControl={false}
         fullscreenControl={false}>
@@ -189,9 +196,10 @@ const MapBoard = ({
         isOpen={isPanelOpen}
         onOpenChange={setPanelOpen}
       />
-      {/* Small screens show the selected port here instead of beside its marker. */}
+      {/* Phones and short screens show the selected port here instead of
+          beside its marker: across the bottom, or in the corner when wide. */}
       {clickedPort ? (
-        <div className='fixed inset-x-3 bottom-8 z-10 rounded-xl bg-white p-3 shadow-xl sm:hidden'>
+        <div className='fixed inset-x-3 bottom-8 z-10 rounded-xl bg-white p-3 shadow-xl roomy:hidden sm:left-auto sm:w-80'>
           <PortSummary
             port={clickedPort}
             color={

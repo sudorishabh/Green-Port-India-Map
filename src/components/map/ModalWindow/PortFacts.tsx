@@ -31,11 +31,12 @@ const PortFacts = ({ port, hub }: Props) => {
     <section
       aria-label='Port profile'
       className='flex shrink-0 flex-col gap-4 lg:w-[40%] lg:overflow-y-auto lg:pr-1'>
-      {/* The same few illustrations are shared by all ports, so they are decorative. */}
+      {/* The same few illustrations are shared by all ports, so they are
+          decorative, and dropped where height is scarce. */}
       <PortImage
         src={port.image_url}
         alt=''
-        className='h-36 w-full rounded-xl object-cover lg:h-44'
+        className='h-36 w-full rounded-xl object-cover short:hidden lg:h-44'
       />
 
       <div className='flex flex-wrap gap-2 text-xs font-medium'>
