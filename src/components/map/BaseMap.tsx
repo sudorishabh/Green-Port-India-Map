@@ -56,6 +56,8 @@ const StreetTiles = () => {
       ...options,
       pmtilesUrl: BOUNDARY_CORRECTIONS,
       maxZoom: MAX_ZOOM,
+      // For pages to restyle, as the public map does.
+      className: "street-tiles",
     }).addTo(map);
     return () => {
       layer.remove();
