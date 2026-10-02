@@ -13,12 +13,7 @@ import { KPIS, Port } from "@/lib/map/types";
 import ModalWindow from "./ModalWindow/ModalWindow";
 import { frameRoutes, FramePadding } from "@/lib/map/frame";
 import { getRoutes, Route } from "@/lib/map/routes";
-import {
-  connectedPorts,
-  findHub,
-  isHub,
-  partnersOf,
-} from "@/lib/map/ports";
+import { connectedPorts, findHub, isHub, partnersOf } from "@/lib/map/ports";
 import Loader from "./Loader";
 import PortsPanel, { PANEL_WIDTH } from "./PortsPanel";
 import { PortSummary } from "./Marker/MarkerCard";
@@ -29,7 +24,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 // India center and coordinates
-const DEFAULT_ZOOM = 3.2;
+const DEFAULT_ZOOM = 3.5;
 const DEFAULT_COORDS = { lat: 23, lng: 78.7861 };
 
 const MIN_ZOOM = 3;
