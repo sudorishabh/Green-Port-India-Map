@@ -23,7 +23,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 // India center and coordinates
-const DEFAULT_ZOOM = 5;
+const DEFAULT_ZOOM = 3.2;
 const DEFAULT_COORDS = { lat: 23, lng: 78.7861 };
 
 const MIN_ZOOM = 3;
@@ -47,9 +47,9 @@ const useMinZoom = () =>
     subscribeToResize,
     () =>
       Math.ceil(
-        Math.log2(Math.max(window.innerWidth, window.innerHeight) / 256)
+        Math.log2(Math.max(window.innerWidth, window.innerHeight) / 256),
       ),
-    () => MIN_ZOOM
+    () => MIN_ZOOM,
   );
 
 /** Phones, and landscape phones too short for floating cards. */
@@ -57,7 +57,7 @@ const useIsCompact = () =>
   useSyncExternalStore(
     subscribeToResize,
     () => window.innerWidth < 640 || window.innerHeight < 560,
-    () => false
+    () => false,
   );
 
 /** Half the width of the card above a selected marker, plus a margin. */
@@ -119,7 +119,7 @@ const MapBoard = ({
 
   const selectedRoutes = useMemo(
     () => getRoutes(clickedPort, ports),
-    [clickedPort, ports]
+    [clickedPort, ports],
   );
   // A selected port's routes are already drawn, so hovering it adds nothing.
   const hoveredRoutes = useMemo(
@@ -127,7 +127,7 @@ const MapBoard = ({
       hoveredPort?.port_id === clickedPort?.port_id
         ? []
         : getRoutes(hoveredPort, ports),
-    [hoveredPort, clickedPort, ports]
+    [hoveredPort, clickedPort, ports],
   );
 
   // Frame a newly selected port with all of its routes, and again when the
@@ -139,7 +139,7 @@ const MapBoard = ({
       { lat: +clickedPort.lat, lng: +clickedPort.lng },
       selectedRoutes.flatMap(({ path }) => path),
       framePadding(isPanelOpen),
-      minZoom
+      minZoom,
     );
   }, [map, clickedPort, selectedRoutes, isCompact, isPanelOpen, minZoom]);
 
@@ -172,7 +172,7 @@ const MapBoard = ({
       setClickedPort(port);
       if (isCompact) setPanelOpen(false);
     },
-    [clickedPort, isCompact]
+    [clickedPort, isCompact],
   );
 
   if (isLoading) return <Loader />;
