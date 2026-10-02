@@ -188,6 +188,10 @@ const PortsPanel = ({
               <span className='size-3 rounded-full border-2 border-white bg-gray-400 opacity-70 shadow' />
               Inactive
             </span>
+            <span className='flex items-center gap-1.5'>
+              <span className='h-0.5 w-5 rounded-full bg-gray-600' />
+              Trade route
+            </span>
             <span className='w-full text-gray-500'>
               Each colour is one hub and the ports it trades with.
             </span>
