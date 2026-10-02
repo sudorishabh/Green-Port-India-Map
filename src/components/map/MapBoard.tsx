@@ -129,10 +129,13 @@ const MapBoard = ({
   ports,
   kpis,
   isLoading,
+  onTilesLoad,
 }: {
   ports: Port[];
   kpis: KPIS[];
   isLoading: boolean;
+  /** Called each time the map's tiles in view have loaded. */
+  onTilesLoad?: () => void;
 }) => {
   const [detailsPort, setDetailsPort] = useState<Port | null>(null);
   const [clickedPort, setClickedPort] = useState<Port | null>(null);
@@ -236,7 +239,10 @@ const MapBoard = ({
         // Its own stacking context keeps the map's layers under the guide
         // panel and the selection sheet.
         className='isolate h-full'>
-        <BaseMap type={mapType} />
+        <BaseMap
+          type={mapType}
+          onLoad={onTilesLoad}
+        />
         <ZoomControl position='bottomright' />
         <NetworkLines
           routes={networkRoutes}
