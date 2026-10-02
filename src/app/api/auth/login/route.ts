@@ -11,10 +11,10 @@ const loginRateLimiter = createRateLimiter({
 
 export const POST = apiRoute(
   async (request) => {
-    const user = await authenticateUser(
+    const owner = await authenticateUser(
       parseCredentials(await readJson(request)),
     );
-    await startSession(user);
+    const user = await startSession(owner);
 
     return Response.json({
       success: true,

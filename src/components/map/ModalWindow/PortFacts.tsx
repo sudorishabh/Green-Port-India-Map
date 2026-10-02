@@ -61,7 +61,8 @@ const PortFacts = ({ port }: { port: Port }) => {
             <div className='flex font-medium rounded-md my-2.5 md:py-0.5 justify-between items-center lg:bg-gray-100'>
               <p className='pl-2 md:pl-5 lg:pl-2 xl:pl-5'>Port capacity :</p>
               <span className='font-normal md:ml-4 xl:ml-6 pr-2  xl:w-[50%]'>
-                {port.port_capacity} Million TEU
+                {/* A decimal column, so the API sends a string such as "8.50". */}
+                {Number(port.port_capacity)} Million TEU
               </span>
             </div>
             <div className='flex font-medium rounded-md my-2.5 md:py-0.5 justify-between items-center lg:bg-gray-100'>

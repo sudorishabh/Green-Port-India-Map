@@ -1,9 +1,7 @@
 import { kpiErrorCodes } from "@/lib/error-codes";
-import { apiRoute, parseId, readJson } from "@/server/http";
-import {
-  addInitiative,
-  type InitiativeInput,
-} from "@/server/services/initiatives";
+import { initiativeSchema } from "@/lib/schemas/initiative";
+import { apiRoute, parseBody, parseId } from "@/server/http";
+import { addInitiative } from "@/server/services/initiatives";
 import { requireUser } from "@/server/session";
 
 /** POST /api/kpi/initiatives/:kpiId/:portId */
@@ -17,7 +15,15 @@ export const POST = apiRoute(
     const kpiId = parseId(id, kpiErrorCodes.INVALID_KPI_ID);
     const portId = parseId(port_id, kpiErrorCodes.INVALID_PORT_ID);
 
-    await addInitiative(kpiId, portId, await readJson<InitiativeInput>(request));
+    await addInitiative(
+      kpiId,
+      portId,
+      await parseBody(
+        request,
+        initiativeSchema,
+        kpiErrorCodes.INVALID_INITIATIVE_DATA,
+      ),
+    );
     return Response.json(
       { message: "Initiative added successfully" },
       { status: 201 },

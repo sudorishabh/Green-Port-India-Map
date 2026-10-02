@@ -15,6 +15,41 @@
       "when": 1790857586896,
       "tag": "0001_sparkling_lenny_balinger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790861417076,
+      "tag": "0002_slimy_alex_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790864192365,
+      "tag": "0003_capitalise_port_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790864280192,
+      "tag": "0004_backfill_port_location_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790865157165,
+      "tag": "0005_unique_port_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790865259405,
+      "tag": "0006_decimal_port_capacity",
+      "breakpoints": true
     }
   ]
 }

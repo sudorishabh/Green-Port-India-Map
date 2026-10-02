@@ -1,9 +1,7 @@
 import { kpiErrorCodes } from "@/lib/error-codes";
-import { apiRoute, parseId, readJson } from "@/server/http";
-import {
-  updateInitiative,
-  type InitiativeInput,
-} from "@/server/services/initiatives";
+import { initiativeSchema } from "@/lib/schemas/initiative";
+import { apiRoute, parseBody, parseId } from "@/server/http";
+import { updateInitiative } from "@/server/services/initiatives";
 import { requireUser } from "@/server/session";
 
 export const POST = apiRoute(
@@ -19,7 +17,11 @@ export const POST = apiRoute(
 
     await updateInitiative(
       initiativeId,
-      await readJson<InitiativeInput>(request),
+      await parseBody(
+        request,
+        initiativeSchema,
+        kpiErrorCodes.INVALID_INITIATIVE_DATA,
+      ),
     );
     return Response.json({ message: "Initiative updated successfully" });
   },

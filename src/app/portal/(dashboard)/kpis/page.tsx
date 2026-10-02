@@ -16,7 +16,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { KpiForm, KpiFormData } from "@/components/portal/kpi-form";
+import { KpiForm } from "@/components/portal/kpi-form";
+import type { KpiInput } from "@/lib/schemas/kpi";
 import { toast } from "sonner";
 import {
   useGetKpisQuery,
@@ -99,7 +100,7 @@ export default function KpisPage() {
     setIsKpi(null);
   };
 
-  const handleFormSubmit = async (data: KpiFormData) => {
+  const handleFormSubmit = async (data: KpiInput) => {
     const kpiToSubmit = isKpi?.kpiData;
     const isEditing = !!kpiToSubmit?.kpi_id;
     const actionText = isEditing ? "Updating" : "Adding";

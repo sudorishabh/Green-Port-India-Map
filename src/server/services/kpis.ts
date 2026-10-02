@@ -1,21 +1,12 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { kpiErrorCodes } from "@/lib/error-codes";
+import type { KpiInput } from "@/lib/schemas/kpi";
 import { db } from "@/server/db";
 import { kpiTargetsLinks, portKpis } from "@/server/db/schema";
 import { AppError } from "@/server/errors";
-import { parseHttpUrl } from "@/server/http";
 
 type TargetLink = typeof kpiTargetsLinks.$inferSelect;
-
-export interface KpiInput {
-  kpi_category: string;
-  kpi: string;
-  kpi_international_target: string;
-  kpi_national_target: string;
-  current_status?: string | null;
-  kpi_target_links?: Pick<TargetLink, "link_url" | "target_type">[];
-}
 
 /** Every KPI with its target links grouped as `{ national, international }`. */
 export async function listKpis() {
@@ -37,40 +28,41 @@ export async function getKpi(kpiId: number) {
     db.select().from(portKpis).where(eq(portKpis.kpi_id, kpiId)),
     db.select().from(kpiTargetsLinks).where(eq(kpiTargetsLinks.kpi_id, kpiId)),
   ]);
+  if (!kpiData) throw kpiNotFound();
   return { kpiData, targetsLinks: groupTargetLinks(links) };
 }
 
-export async function createKpi(input: KpiInput) {
-  const fields = pickKpiFields(input);
-  if (Object.values(fields).some((value) => typeof value !== "string")) {
-    throw new AppError(kpiErrorCodes.KPI_INVALID_DATA, 400);
-  }
-
+export async function createKpi({ kpi_target_links, ...fields }: KpiInput) {
   await db.transaction(async (tx) => {
     const [{ kpi_id }] = await tx
       .insert(portKpis)
       .values(fields)
       .returning({ kpi_id: portKpis.kpi_id });
 
-    const links = toLinkRows(kpi_id, input.kpi_target_links);
+    const links = toLinkRows(kpi_id, kpi_target_links);
     if (links.length > 0) await tx.insert(kpiTargetsLinks).values(links);
   });
 }
 
 /** Updates the KPI; target links are replaced wholesale when provided. */
-export async function updateKpi(kpiId: number, input: KpiInput) {
+export async function updateKpi(
+  kpiId: number,
+  { kpi_target_links, ...fields }: KpiInput,
+) {
   await db.transaction(async (tx) => {
-    await tx
+    const updated = await tx
       .update(portKpis)
-      .set({ ...pickKpiFields(input), current_status: input.current_status })
-      .where(eq(portKpis.kpi_id, kpiId));
+      .set(fields)
+      .where(eq(portKpis.kpi_id, kpiId))
+      .returning({ kpi_id: portKpis.kpi_id });
+    if (updated.length === 0) throw kpiNotFound();
 
-    if (input.kpi_target_links) {
+    if (kpi_target_links) {
       await tx
         .delete(kpiTargetsLinks)
         .where(eq(kpiTargetsLinks.kpi_id, kpiId));
 
-      const links = toLinkRows(kpiId, input.kpi_target_links);
+      const links = toLinkRows(kpiId, kpi_target_links);
       if (links.length > 0) await tx.insert(kpiTargetsLinks).values(links);
     }
   });
@@ -78,7 +70,15 @@ export async function updateKpi(kpiId: number, input: KpiInput) {
 
 /** Target links and port initiatives go with it via ON DELETE CASCADE. */
 export async function deleteKpi(kpiId: number) {
-  await db.delete(portKpis).where(eq(portKpis.kpi_id, kpiId));
+  const deleted = await db
+    .delete(portKpis)
+    .where(eq(portKpis.kpi_id, kpiId))
+    .returning({ kpi_id: portKpis.kpi_id });
+  if (deleted.length === 0) throw kpiNotFound();
+}
+
+function kpiNotFound() {
+  return new AppError(kpiErrorCodes.INVALID_KPI_ID, 404, "KPI not found");
 }
 
 function groupTargetLinks(links: TargetLink[]) {
@@ -90,20 +90,6 @@ function groupTargetLinks(links: TargetLink[]) {
   };
 }
 
-function pickKpiFields({
-  kpi_category,
-  kpi,
-  kpi_international_target,
-  kpi_national_target,
-}: KpiInput) {
-  return { kpi_category, kpi, kpi_international_target, kpi_national_target };
-}
-
-/** Called inside the KPI's transaction, so an invalid URL rolls back the whole write. */
 function toLinkRows(kpiId: number, links: KpiInput["kpi_target_links"] = []) {
-  return links.map(({ link_url, target_type }) => ({
-    link_url: parseHttpUrl(link_url, kpiErrorCodes.INVALID_URL),
-    target_type,
-    kpi_id: kpiId,
-  }));
+  return links.map((link) => ({ ...link, kpi_id: kpiId }));
 }

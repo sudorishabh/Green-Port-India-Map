@@ -1,6 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Controller, ControllerRenderProps, useForm } from "react-hook-form";
+import React, { useEffect } from "react";
+import {
+  Controller,
+  ControllerRenderProps,
+  DefaultValues,
+  useForm,
+  useWatch,
+} from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,6 +31,88 @@ import { useAddPortMutation } from "@/lib/portal/features/ports/portsApiSlice";
 import { useUpdatePortMutation } from "@/lib/portal/features/ports/portsApiSlice";
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
+import { HEX_COLOR, MAX_PORT_CAPACITY } from "@/lib/schemas/port";
+
+/**
+ * A form number from an input or the API, which returns decimal columns as
+ * strings. Blank becomes undefined rather than NaN, so it is left out of the
+ * request instead of being sent as null.
+ */
+function toNumber(value: number | string | null | undefined) {
+  return value === null || value === undefined || value === ""
+    ? undefined
+    : Number(value);
+}
+
+/** Validation rules for a coordinate, matching the API's limits. */
+function coordinateRules(label: string, limit: number) {
+  const message = `${label} must be between -${limit} and ${limit}`;
+  return {
+    setValueAs: toNumber,
+    required: `${label} is required`,
+    min: { value: -limit, message },
+    max: { value: limit, message },
+  };
+}
+
+/** The form's values for the port being edited, or a blank `portType` port. */
+function toFormValues(
+  port: Port | null | undefined,
+  portType: PortFormProps["portType"]
+): DefaultValues<Port> {
+  if (!port) {
+    return {
+      port_location_type: portType || "",
+      name: "",
+      country: portType === "Indian" ? "India" : "",
+      city: "",
+      number_of_berths: undefined,
+      port_type: "",
+      average_tat: undefined,
+      port_capacity: undefined,
+      dominant_cargo: "",
+      lat: undefined,
+      lng: undefined,
+      status: "Active",
+      ind_port_name: "",
+      ind_port_lat: undefined,
+      ind_port_lng: undefined,
+      polyline_curve: undefined,
+      polyline_color: undefined,
+      zoom: undefined,
+      zoom_center_lat: undefined,
+      zoom_center_lng: undefined,
+    };
+  }
+
+  return {
+    // Go by country, as the ports page does: older rows saved the wrong type.
+    port_location_type:
+      port.country?.toLowerCase() === "india" ? "Indian" : "Other",
+    name: port.name || "",
+    country: port.country || "",
+    city: port.city || "",
+    number_of_berths: toNumber(port.number_of_berths),
+    port_type: port.port_type || "",
+    average_tat: toNumber(port.average_tat),
+    port_capacity: toNumber(port.port_capacity),
+    dominant_cargo: port.dominant_cargo || "",
+    lat: toNumber(port.lat),
+    lng: toNumber(port.lng),
+    status:
+      port.status === "Active" || port.status === "Inactive"
+        ? port.status
+        : "Active",
+    ind_port_name: port.ind_port_name || "",
+    ind_port_lat: toNumber(port.ind_port_lat),
+    ind_port_lng: toNumber(port.ind_port_lng),
+    polyline_curve: toNumber(port.polyline_curve),
+    polyline_color: port.polyline_color || undefined,
+    zoom: toNumber(port.zoom),
+    zoom_center_lat: toNumber(port.zoom_center_lat),
+    zoom_center_lng: toNumber(port.zoom_center_lng),
+  };
+}
 
 export function PortForm({
   isOpen,
@@ -33,158 +121,37 @@ export function PortForm({
   indianPorts = [],
   editingPort,
 }: PortFormProps) {
-  const [selectedIndianPort, setSelectedIndianPort] = useState<Port | null>(
-    null
-  );
-
   const [addPort, { isLoading: isAddingPort }] = useAddPortMutation();
   const [updatePort, { isLoading: isUpdatingPort }] = useUpdatePortMutation();
 
   const isLoading = isAddingPort || isUpdatingPort;
 
-  const defaultValues = {
-    portLocationType: portType || "",
-    name: "",
-    country: portType === "Indian" ? "India" : "",
-    city: "",
-    number_of_berths: undefined,
-    port_type: "",
-    average_tat: undefined,
-    port_capacity: undefined,
-    dominant_cargo: "",
-    lat: undefined,
-    lng: undefined,
-    status: "Active",
-    ind_port_name: "",
-    ind_port_lat: undefined,
-    ind_port_lng: undefined,
-    polyline_curve: undefined,
-    polyline_color: undefined,
-    zoom: undefined,
-    zoom_center_lat: undefined,
-    zoom_center_lng: undefined,
-  };
-
   const {
     handleSubmit,
     register,
     setValue,
-    watch,
     reset,
     control,
     formState: { errors },
   } = useForm<Port>({
-    defaultValues,
+    defaultValues: toFormValues(editingPort, portType),
   });
 
-  const watchedPortLocationType = watch("portLocationType");
-  const watchedIndianPortName = watch("ind_port_name");
-  const watchedLat = watch("ind_port_lat");
-  const watchedLng = watch("ind_port_lng");
+  const [watchedPortLocationType, watchedIndianPortName, watchedPolylineColor] =
+    useWatch({
+      control,
+      name: ["port_location_type", "ind_port_name", "polyline_color"],
+    });
 
-  // Update fields when an Indian port is selected in the dropdown
+  const selectedIndianPort = indianPorts.find(
+    (port) => port.name === watchedIndianPortName
+  );
+
+  // Start from the saved port, or a blank form, every time the dialog opens.
+  // Refetches of the port list while it is open must not wipe the user's edits.
   useEffect(() => {
-    if (watchedIndianPortName && portType === "Other") {
-      const selectedPort = indianPorts.find(
-        (p) => p.name === watchedIndianPortName
-      );
-      if (selectedPort) {
-        setSelectedIndianPort(selectedPort);
-        setValue("ind_port_lat", selectedPort.lat);
-        setValue("ind_port_lng", selectedPort.lng);
-      }
-    }
-  }, [watchedIndianPortName, indianPorts, portType]);
-
-  // Set portLocationType and country based on portType prop
-  useEffect(() => {
-    if (portType) {
-      setValue("portLocationType", portType);
-      if (portType === "Indian") {
-        setValue("country", "India");
-      }
-    }
-  }, [portType]);
-
-  // Handle editingPort when editing
-  useEffect(() => {
-    if (editingPort) {
-      // Determine initial portLocationType based on country
-      const initialPortLocationType =
-        editingPort.country?.toLowerCase() === "india" ? "Indian" : "Other";
-
-      // First reset the form with the basic data
-      reset({
-        portLocationType: initialPortLocationType,
-        name: editingPort.name || "",
-        country: editingPort.country || "",
-        city: editingPort.city || "",
-        number_of_berths: editingPort.number_of_berths || undefined,
-        port_type: editingPort.port_type || "",
-        average_tat:
-          editingPort.average_tat !== null &&
-          editingPort.average_tat !== undefined
-            ? typeof editingPort.average_tat === "string"
-              ? parseFloat(editingPort.average_tat)
-              : editingPort.average_tat
-            : undefined,
-        port_capacity: editingPort.port_capacity || undefined,
-        dominant_cargo: editingPort.dominant_cargo || "",
-        lat:
-          editingPort.lat !== null && editingPort.lat !== undefined
-            ? typeof editingPort.lat === "string"
-              ? parseFloat(editingPort.lat)
-              : editingPort.lat
-            : 0,
-        lng:
-          editingPort.lng !== null && editingPort.lng !== undefined
-            ? typeof editingPort.lng === "string"
-              ? parseFloat(editingPort.lng)
-              : editingPort.lng
-            : 0,
-        status:
-          editingPort.status === "Active" || editingPort.status === "Inactive"
-            ? editingPort.status
-            : "Active",
-        ind_port_name: editingPort.ind_port_name || "",
-        ind_port_lat:
-          editingPort.ind_port_lat !== null &&
-          editingPort.ind_port_lat !== undefined
-            ? typeof editingPort.ind_port_lat === "string"
-              ? parseFloat(editingPort.ind_port_lat)
-              : editingPort.ind_port_lat
-            : undefined,
-        ind_port_lng:
-          editingPort.ind_port_lng !== null &&
-          editingPort.ind_port_lng !== undefined
-            ? typeof editingPort.ind_port_lng === "string"
-              ? parseFloat(editingPort.ind_port_lng)
-              : editingPort.ind_port_lng
-            : undefined,
-        polyline_curve: editingPort.polyline_curve || undefined,
-        polyline_color: editingPort.polyline_color || undefined,
-        zoom: editingPort.zoom || undefined,
-        zoom_center_lat: editingPort.zoom_center_lat || undefined,
-        zoom_center_lng: editingPort.zoom_center_lng || undefined,
-      });
-
-      // Find the Indian port if editing a non-Indian port
-      if (initialPortLocationType === "Other" && editingPort.ind_port_name) {
-        const foundPort = indianPorts.find(
-          (p) => p.name === editingPort.ind_port_name
-        );
-        if (foundPort) {
-          setSelectedIndianPort(foundPort);
-        }
-      }
-    } else {
-      reset({
-        ...defaultValues,
-        portLocationType: portType || "",
-        country: portType === "Indian" ? "India" : "",
-      });
-    }
-  }, [editingPort, portType, indianPorts]);
+    if (isOpen) reset(toFormValues(editingPort, portType));
+  }, [isOpen, editingPort, portType, reset]);
 
   const getDialogTitle = () => {
     if (editingPort) {
@@ -197,8 +164,16 @@ export function PortForm({
     } Port`;
   };
 
-  const handleFormSubmit = async (data: Port) => {
+  const handleFormSubmit = async (formData: Port) => {
     const editingPortId = editingPort?.port_id;
+    // Partner ports keep a copy of their Indian port's coordinates; save its current ones.
+    const data = selectedIndianPort
+      ? {
+          ...formData,
+          ind_port_lat: toNumber(selectedIndianPort.lat),
+          ind_port_lng: toNumber(selectedIndianPort.lng),
+        }
+      : formData;
 
     try {
       if (editingPort && editingPortId) {
@@ -248,6 +223,7 @@ export function PortForm({
                   <Label htmlFor='name'>Port Name *</Label>
                   <Input
                     id='name'
+                    maxLength={100}
                     {...register("name", {
                       required: "Port Name is required",
                     })}
@@ -264,6 +240,7 @@ export function PortForm({
                   <Label htmlFor='country'>Country *</Label>
                   <Input
                     id='country'
+                    maxLength={100}
                     {...register("country", {
                       required: "Country is required",
                     })}
@@ -281,6 +258,7 @@ export function PortForm({
                   <Label htmlFor='city'>City *</Label>
                   <Input
                     id='city'
+                    maxLength={100}
                     {...register("city", {
                       required: "City is required",
                     })}
@@ -340,10 +318,7 @@ export function PortForm({
                       id='lat'
                       type='number'
                       step='any'
-                      {...register("lat", {
-                        valueAsNumber: true,
-                        required: "Latitude is required",
-                      })}
+                      {...register("lat", coordinateRules("Latitude", 90))}
                       placeholder='E.g., 1.290270'
                     />
                     {errors.lat && (
@@ -359,10 +334,7 @@ export function PortForm({
                       id='lng'
                       type='number'
                       step='any'
-                      {...register("lng", {
-                        valueAsNumber: true,
-                        required: "Longitude is required",
-                      })}
+                      {...register("lng", coordinateRules("Longitude", 180))}
                       placeholder='E.g., 103.851959'
                     />
                     {errors.lng && (
@@ -391,8 +363,10 @@ export function PortForm({
                     <Input
                       id='number_of_berths'
                       type='number'
+                      step='1'
+                      min='0'
                       {...register("number_of_berths", {
-                        valueAsNumber: true,
+                        setValueAs: toNumber,
                         // required: "Number of Berths is required", // Make optional
                       })}
                       placeholder='E.g., 10'
@@ -408,6 +382,7 @@ export function PortForm({
                     <Label htmlFor='port_type'>Port Type</Label>
                     <Input
                       id='port_type'
+                      maxLength={100}
                       {...register("port_type", {
                         // required: "Port Type is required", // Make optional
                       })}
@@ -425,12 +400,13 @@ export function PortForm({
                     <Input
                       id='average_tat'
                       type='number'
-                      step='any'
+                      step='1'
+                      min='0'
                       {...register("average_tat", {
-                        valueAsNumber: true,
+                        setValueAs: toNumber,
                         // required: "Average TAT is required", // Make optional
                       })}
-                      placeholder='E.g., 2.5'
+                      placeholder='E.g., 2'
                     />
                     {errors.average_tat && (
                       <p className='text-sm text-destructive'>
@@ -441,16 +417,22 @@ export function PortForm({
 
                   <div className='space-y-2'>
                     <Label htmlFor='port_capacity'>
-                      Port Capacity (TEU/Year)
+                      Port Capacity (Million TEU/Year)
                     </Label>
                     <Input
                       id='port_capacity'
                       type='number'
+                      step='0.01'
+                      min='0'
                       {...register("port_capacity", {
-                        valueAsNumber: true,
+                        setValueAs: toNumber,
+                        max: {
+                          value: MAX_PORT_CAPACITY,
+                          message: "Enter the capacity in million TEU, e.g. 8.5",
+                        },
                         // required: "Port Capacity is required", // Make optional
                       })}
-                      placeholder='E.g., 5000000'
+                      placeholder='E.g., 8.5'
                     />
                     {errors.port_capacity && (
                       <p className='text-sm text-destructive'>
@@ -463,6 +445,7 @@ export function PortForm({
                     <Label htmlFor='dominant_cargo'>Dominant Cargo</Label>
                     <Input
                       id='dominant_cargo'
+                      maxLength={200}
                       {...register("dominant_cargo", {
                         // required: "Dominant Cargo is required", // Make optional
                       })}
@@ -499,10 +482,10 @@ export function PortForm({
                         id='zoom_center_lat'
                         type='number'
                         step='any'
-                        {...register("zoom_center_lat", {
-                          valueAsNumber: true,
-                          required: "Zoom Center Latitude is required",
-                        })}
+                        {...register(
+                          "zoom_center_lat",
+                          coordinateRules("Zoom Center Latitude", 90)
+                        )}
                         placeholder='Enter zoom center latitude'
                       />
                       {errors.zoom_center_lat && (
@@ -519,10 +502,10 @@ export function PortForm({
                         id='zoom_center_lng'
                         type='number'
                         step='any'
-                        {...register("zoom_center_lng", {
-                          valueAsNumber: true,
-                          required: "Zoom Center Longitude is required",
-                        })}
+                        {...register(
+                          "zoom_center_lng",
+                          coordinateRules("Zoom Center Longitude", 180)
+                        )}
                         placeholder='Enter zoom center longitude'
                       />
                       {errors.zoom_center_lng && (
@@ -540,7 +523,7 @@ export function PortForm({
                         min='1'
                         max='20'
                         {...register("zoom", {
-                          valueAsNumber: true,
+                          setValueAs: toNumber,
                           required: "Default Zoom is required",
                         })}
                         placeholder='E.g., 5'
@@ -560,20 +543,27 @@ export function PortForm({
                           id='polyline_color'
                           {...register("polyline_color", {
                             required: "Polyline Color is required",
+                            pattern: {
+                              value: HEX_COLOR,
+                              message: "Use a hex colour such as #ff0000",
+                            },
                           })}
                           placeholder='#FF0000'
                           className='flex-grow'
                         />
                         <Input
                           type='color'
+                          aria-label='Pick connection line color'
                           onChange={(e) =>
-                            setValue("polyline_color", e.target.value)
+                            setValue("polyline_color", e.target.value, {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            })
                           }
-                          value={watch("polyline_color") || "#007aff"} // Default color
+                          value={watchedPolylineColor || "#007aff"} // Default color
                           className='h-10 w-12 p-0 border-none rounded-md cursor-pointer appearance-none bg-transparent'
                           style={{
-                            backgroundColor:
-                              watch("polyline_color") || "#007aff",
+                            backgroundColor: watchedPolylineColor || "#007aff",
                           }} // Show selected color
                         />
                       </div>
@@ -654,12 +644,14 @@ export function PortForm({
                       <Input
                         id='polyline_curve'
                         type='number'
-                        step='any'
+                        step='1'
+                        min='-90'
+                        max='90'
                         {...register("polyline_curve", {
-                          valueAsNumber: true,
+                          setValueAs: toNumber,
                           required: "Polyline Curve factor is required",
                         })}
-                        placeholder='E.g., 0.5 (0 to 1)'
+                        placeholder='E.g., 20 (degrees the line bows out)'
                       />
                       {errors.polyline_curve && (
                         <p className='text-sm text-destructive'>
@@ -677,11 +669,11 @@ export function PortForm({
                       <div className='grid grid-cols-2 gap-2 mt-1 text-sm'>
                         <p>
                           <span className='text-muted-foreground'>Lat:</span>{" "}
-                          {watchedLat}
+                          {selectedIndianPort.lat}
                         </p>
                         <p>
                           <span className='text-muted-foreground'>Lng:</span>{" "}
-                          {watchedLng}
+                          {selectedIndianPort.lng}
                         </p>
                       </div>
                     </div>

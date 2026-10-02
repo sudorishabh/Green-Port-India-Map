@@ -35,7 +35,7 @@ export type Initiative = {
 
 /** A port as edited in the portal's port form. */
 export type Port = {
-  portLocationType: string;
+  port_location_type: string;
   port_id?: number;
   name: string;
   country: string;

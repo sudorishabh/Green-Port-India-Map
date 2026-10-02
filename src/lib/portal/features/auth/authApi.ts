@@ -47,7 +47,7 @@ const authApi = api.injectEndpoints({
     logout: builder.mutation<{ success: boolean }, void>({
       query: () => ({
         url: "/auth/logout",
-        method: "GET",
+        method: "POST",
       }),
     }),
   }),

@@ -1,64 +1,56 @@
 import { Port } from "./types";
 
+type PortPath = [
+  {
+    lat: number;
+    lng: number;
+    ind_port_name: string;
+    country: string;
+    polyline_color: string;
+  },
+  {
+    lat: number;
+    lng: number;
+    name: string;
+    polyline_curve: number;
+  },
+];
+
+/**
+ * The route lines to draw for `port`: from a hub (a port without an Indian port
+ * name) to each of its partner ports, or from a partner port's hub to it.
+ *
+ * Lines start at the hub's own coordinates. Partner ports also store a copy of
+ * them, which goes stale when the hub is moved, so the copy is only a fallback
+ * for a hub missing from `allPorts`.
+ */
 export const getPortPaths = (
   port: Port | null,
   allPorts: Port[]
-): Array<
-  [
-    {
-      lat: number;
-      lng: number;
-      ind_port_name: string;
-      country: string;
-      polyline_color: string;
-    },
-    {
-      lat: number;
-      lng: number;
-      name: string;
-      polyline_curve: number;
-    }
-  ]
-> => {
+): PortPath[] => {
   if (!port) return [];
 
-  if (!port.ind_port_name) {
-    return allPorts
-      ?.filter((p: Port) => p.ind_port_name === port.name)
-      .map((p: Port) => [
-        {
-          lat: Number(p.ind_port_lat),
-          lng: Number(p.ind_port_lng),
-          ind_port_name: p.ind_port_name || "",
-          country: p.country,
-          polyline_color: port.polyline_color || "",
-        },
-        {
-          lat: Number(p.lat),
-          lng: Number(p.lng),
-          name: p.name,
-          polyline_curve: Number(p.polyline_curve),
-        },
-      ]);
-  } else {
-    return [
-      [
-        {
-          lat: Number(port.ind_port_lat),
-          lng: Number(port.ind_port_lng),
-          ind_port_name: port.ind_port_name,
-          country: port.country,
-          polyline_color:
-            allPorts.find((p: Port) => p.name === port.ind_port_name)
-              ?.polyline_color || "",
-        },
-        {
-          lat: Number(port.lat),
-          lng: Number(port.lng),
-          name: port.name,
-          polyline_curve: Number(port.polyline_curve),
-        },
-      ],
-    ];
-  }
+  const isHub = !port.ind_port_name;
+  const hub = isHub
+    ? port
+    : allPorts.find((p) => !p.ind_port_name && p.name === port.ind_port_name);
+  const partners = isHub
+    ? allPorts.filter((p) => p.ind_port_name === port.name)
+    : [port];
+
+  return partners.map((partner) => [
+    {
+      lat: Number(hub?.lat ?? partner.ind_port_lat),
+      lng: Number(hub?.lng ?? partner.ind_port_lng),
+      ind_port_name: partner.ind_port_name || "",
+      country: partner.country,
+      polyline_color: hub?.polyline_color || "",
+    },
+    {
+      lat: Number(partner.lat),
+      lng: Number(partner.lng),
+      name: partner.name,
+      polyline_curve: Number(partner.polyline_curve),
+    },
+  ]);
 };

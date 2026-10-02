@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -19,15 +20,17 @@ import {
 } from "@/lib/portal/features/kpis/kpisApiSlice";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
 import { Initiative } from "@/lib/portal/types";
-import { isHttpUrl } from "@/lib/urls";
+import { initiativeSchema } from "@/lib/schemas/initiative";
 
 const InitiativeForm = ({
   selectedPortId,
+  portName,
   setSelectedPortId,
   open,
   onOpenChange,
 }: {
   selectedPortId: number | null;
+  portName?: string;
   setSelectedPortId: (id: number | null) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,10 +44,11 @@ const InitiativeForm = ({
     null
   );
 
-  const { data: initiativesData, refetch: refetchInitiatives } =
-    useGetPortInitiativesQuery(selectedPortId as number, {
-      skip: !selectedPortId,
-    });
+  // The initiative mutations invalidate this query, so it refetches by itself.
+  const { data: initiativesData } = useGetPortInitiativesQuery(
+    selectedPortId as number,
+    { skip: !selectedPortId }
+  );
   const { data: kpisData } = useGetKpisQuery();
   const [addGreenInitiative, { isLoading: isAddingInitiative }] =
     useAddGreenInitiativeMutation();
@@ -53,14 +57,20 @@ const InitiativeForm = ({
   const [deleteGreenInitiative, { isLoading: isDeletingInitiative }] =
     useDeleteGreenInitiativeMutation();
 
-  const handleCloseInitiativeDialog = () => {
-    onOpenChange(false);
-    setSelectedPortId(0);
-    setSelectedKpiId(null);
+  const closeInitiativeEditor = () => {
     setIsAddOrEditInitiativeOpen(false);
     setEditingInitiative(null);
     setInitiativeName("");
     setInitiativeUrl("");
+  };
+
+  // Every way of closing (Close, Escape, clicking outside) comes through here,
+  // so the next port doesn't open on this one's half-filled editor.
+  const handleCloseInitiativeDialog = () => {
+    closeInitiativeEditor();
+    setSelectedKpiId(null);
+    setSelectedPortId(null);
+    onOpenChange(false);
   };
 
   const handleOpenAddInitiativeForm = (kpiId: number) => {
@@ -88,7 +98,6 @@ const InitiativeForm = ({
       try {
         await deleteGreenInitiative(initiative.initiative_id).unwrap();
         toast.success("Initiative deleted successfully!");
-        refetchInitiatives();
       } catch (error) {
         toast.error(
           getApiErrorMessage(
@@ -105,22 +114,19 @@ const InitiativeForm = ({
       toast.error("KPI ID or Port ID is missing.");
       return;
     }
-    if (!initiativeName.trim()) {
-      toast.error("Initiative name cannot be empty.");
-      return;
-    }
-    if (!isHttpUrl(initiativeUrl)) {
-      toast.error(
-        "Please enter a valid source URL (e.g., http://example.com)."
-      );
+    const parsed = initiativeSchema.safeParse({
+      initiative: initiativeName,
+      initiative_url: initiativeUrl,
+    });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
       return;
     }
 
     const initiativePayload = {
-      initiative: initiativeName,
+      ...parsed.data,
       kpi_id: selectedKpiId,
       port_id: selectedPortId,
-      initiative_url: initiativeUrl,
     };
 
     try {
@@ -134,11 +140,7 @@ const InitiativeForm = ({
         await addGreenInitiative(initiativePayload).unwrap();
         toast.success("Initiative added successfully!");
       }
-      refetchInitiatives();
-      setIsAddOrEditInitiativeOpen(false);
-      setEditingInitiative(null);
-      setInitiativeName("");
-      setInitiativeUrl("");
+      closeInitiativeEditor();
     } catch (error) {
       toast.error(
         getApiErrorMessage(
@@ -154,12 +156,13 @@ const InitiativeForm = ({
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}>
+      onOpenChange={(isOpen) => {
+        if (!isOpen) handleCloseInitiativeDialog();
+      }}>
       <DialogContent className='sm:max-w-6xl max-h-[80vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>
-            Port Initiatives for
-            {/* {selectedPort || `Port ID: ${selectedPortId}`} */}
+            {portName ? `Initiatives for ${portName}` : "Port Initiatives"}
           </DialogTitle>
         </DialogHeader>
 
@@ -279,12 +282,7 @@ const InitiativeForm = ({
             <DialogFooter>
               <Button
                 variant='outline'
-                onClick={() => {
-                  setIsAddOrEditInitiativeOpen(false);
-                  setEditingInitiative(null);
-                  setInitiativeName("");
-                  setInitiativeUrl("");
-                }}>
+                onClick={closeInitiativeEditor}>
                 Cancel
               </Button>
               <Button

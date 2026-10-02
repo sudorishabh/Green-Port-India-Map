@@ -6,7 +6,6 @@ export const authErrorCodes = {
   FAILED_TO_REGISTER_USER: 4003,
   TOKEN_EXPIRED: 4004,
   TOKEN_INVALID: 4005,
-  USER_NOT_FOUND: 4006,
   NO_REFRESH_TOKEN: 4008,
   SESSION_EXPIRED: 4009,
   INVALID_REFRESH_TOKEN: 4010,
@@ -31,4 +30,5 @@ export const kpiErrorCodes = {
   INVALID_INITIATIVE_ID: 3007,
   /** A target or initiative link that isn't an http(s) URL. */
   INVALID_URL: 3008,
+  INVALID_INITIATIVE_DATA: 3009,
 } as const;

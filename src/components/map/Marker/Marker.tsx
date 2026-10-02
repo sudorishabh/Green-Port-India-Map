@@ -109,7 +109,7 @@ const Markers: React.FC<MarkersProps> = ({
 
         return (
           <AdvancedMarker
-            key={port.port_id + port.lat}
+            key={port.port_id}
             position={position}
             zIndex={isActive ? 100 : 1}
             onClick={() => handleClickMarker(port)}>

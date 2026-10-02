@@ -413,6 +413,7 @@ export default function PortsPage() {
 
       <InitiativeForm
         selectedPortId={selectedPortId}
+        portName={ports.find((port) => port.port_id === selectedPortId)?.name}
         setSelectedPortId={setSelectedPortId}
         open={!!selectedPortId}
         onOpenChange={() => setSelectedPortId(null)}

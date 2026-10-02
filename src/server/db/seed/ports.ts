@@ -4,8 +4,9 @@ type PortRow = typeof portMaster.$inferInsert;
 
 /**
  * Facts shown in the port modal. Capacity is the latest annual container
- * throughput in million TEU and turnaround time is in whole days, as the
- * columns are integers; most foreign turnaround times are estimates.
+ * throughput in million TEU, rounded to whole numbers here. Turnaround time is
+ * in whole days, as that column is an integer; most foreign turnaround times
+ * are estimates.
  */
 type PortFacts = Pick<
   PortRow,
@@ -14,9 +15,8 @@ type PortFacts = Pick<
   | "number_of_berths"
   | "port_type"
   | "average_tat"
-  | "port_capacity"
   | "dominant_cargo"
-> & { lat: number; lng: number };
+> & { lat: number; lng: number; port_capacity: number };
 
 export interface HubPort extends PortFacts {
   /** Colour of the route lines drawn to this port's partners. */

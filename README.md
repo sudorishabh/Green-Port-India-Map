@@ -79,9 +79,9 @@ Every endpoint returns JSON. Errors look like `{ success: false, message, errorC
 
 | Method | Path                                            |    |
 | ------ | ----------------------------------------------- | -- |
-| POST   | `/api/auth/login`                               |    |
+| POST   | `/api/auth/login`, `/api/auth/logout`           |    |
 | POST   | `/api/auth/register`                            | 🔒 |
-| GET    | `/api/auth/refresh`, `/api/auth/logout`         |    |
+| GET    | `/api/auth/refresh`                             |    |
 | GET    | `/api/port/all-ports`, `/api/port/single-port/:id` |    |
 | POST   | `/api/port/create-port`, `/api/port/update-port/:id` | 🔒 |
 | DELETE | `/api/port/delete-port/:id`                     | 🔒 |
@@ -92,4 +92,4 @@ Every endpoint returns JSON. Errors look like `{ success: false, message, errorC
 | POST   | `/api/kpi/initiatives/:kpiId/:portId`, `/api/kpi/update-initiative/:id` | 🔒 |
 | DELETE | `/api/kpi/delete-initiative/:id`                | 🔒 |
 
-API responses carry helmet-equivalent security headers (`next.config.ts`) and are rate limited to 250 requests per 10 minutes per IP, or 10 per 15 minutes for `/api/auth/login` (in memory, per server instance). Portal pages can't be framed by other sites; the public map can.
+API responses carry helmet-equivalent security headers (`next.config.ts`) and are rate limited to 250 requests per 10 minutes per IP, or 10 per 15 minutes for `/api/auth/login` (in memory, per server instance). Portal pages can't be framed by other sites; the public map can. Browsers' cross-site POST and DELETE requests are rejected with a 403. Logging out revokes the user's sessions on every device (via `users.session_version`).

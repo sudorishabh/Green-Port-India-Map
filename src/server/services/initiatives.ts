@@ -1,14 +1,10 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import { kpiErrorCodes } from "@/lib/error-codes";
+import type { InitiativeInput } from "@/lib/schemas/initiative";
 import { db } from "@/server/db";
 import { portGreenInitiatives } from "@/server/db/schema";
-import { parseHttpUrl } from "@/server/http";
-
-export type InitiativeInput = Pick<
-  typeof portGreenInitiatives.$inferInsert,
-  "initiative" | "initiative_url"
->;
+import { AppError } from "@/server/errors";
 
 /** Green initiatives for a port, optionally narrowed to a single KPI. */
 export async function listInitiatives(portId: number, kpiId?: number) {
@@ -23,34 +19,41 @@ export async function listInitiatives(portId: number, kpiId?: number) {
     );
 }
 
+/** An unknown KPI or port fails the foreign key, which the API reports as a 404. */
 export async function addInitiative(
   kpiId: number,
   portId: number,
-  { initiative, initiative_url }: InitiativeInput,
+  input: InitiativeInput,
 ) {
-  await db.insert(portGreenInitiatives).values({
-    initiative,
-    initiative_url: parseHttpUrl(initiative_url, kpiErrorCodes.INVALID_URL),
-    kpi_id: kpiId,
-    port_id: portId,
-  });
+  await db
+    .insert(portGreenInitiatives)
+    .values({ ...input, kpi_id: kpiId, port_id: portId });
 }
 
 export async function updateInitiative(
   initiativeId: number,
-  { initiative, initiative_url }: InitiativeInput,
+  input: InitiativeInput,
 ) {
-  await db
+  const updated = await db
     .update(portGreenInitiatives)
-    .set({
-      initiative,
-      initiative_url: parseHttpUrl(initiative_url, kpiErrorCodes.INVALID_URL),
-    })
-    .where(eq(portGreenInitiatives.initiative_id, initiativeId));
+    .set(input)
+    .where(eq(portGreenInitiatives.initiative_id, initiativeId))
+    .returning({ initiative_id: portGreenInitiatives.initiative_id });
+  if (updated.length === 0) throw initiativeNotFound();
 }
 
 export async function deleteInitiative(initiativeId: number) {
-  await db
+  const deleted = await db
     .delete(portGreenInitiatives)
-    .where(eq(portGreenInitiatives.initiative_id, initiativeId));
+    .where(eq(portGreenInitiatives.initiative_id, initiativeId))
+    .returning({ initiative_id: portGreenInitiatives.initiative_id });
+  if (deleted.length === 0) throw initiativeNotFound();
+}
+
+function initiativeNotFound() {
+  return new AppError(
+    kpiErrorCodes.INVALID_INITIATIVE_ID,
+    404,
+    "Initiative not found",
+  );
 }
