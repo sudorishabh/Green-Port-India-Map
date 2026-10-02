@@ -189,20 +189,20 @@ export default function PortsPage() {
         <Table>
           <TableHeader className='bg-muted/30'>
             <TableRow>
-              <TableHead className='pl-6 w-[30%]'>Name</TableHead>
-              <TableHead>City</TableHead>
+              <TableHead className='pl-4 sm:pl-6'>Name</TableHead>
+              <TableHead className='hidden sm:table-cell'>City</TableHead>
               {title === "International Ports" && (
-                <TableHead>Country</TableHead>
+                <TableHead className='hidden md:table-cell'>Country</TableHead>
               )}
-              <TableHead>Status</TableHead>
-              <TableHead className='w-44'>Actions</TableHead>
+              <TableHead className='hidden sm:table-cell'>Status</TableHead>
+              <TableHead className='pr-4 text-right sm:pr-6'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {ports.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={title === "International Ports" ? 5 : 4} // Adjust colSpan
+                  colSpan={title === "International Ports" ? 5 : 4}
                   className='h-24 text-center text-muted-foreground italic pl-6'>
                   {searchValue
                     ? "No matching ports found."
@@ -214,14 +214,30 @@ export default function PortsPage() {
                 <TableRow
                   key={port.port_id}
                   className='hover:bg-muted/50 transition-colors'>
-                  <TableCell className='font-medium pl-6'>
+                  <TableCell className='pl-4 font-medium whitespace-normal sm:pl-6'>
                     {port.name}
+                    {/* Columns hidden on small screens fold in under the name. */}
+                    <span className='block text-xs font-normal text-muted-foreground sm:hidden'>
+                      {title === "International Ports"
+                        ? `${port.city}, ${port.country}`
+                        : port.city}
+                      {port.status !== "Active" && ` · ${port.status}`}
+                    </span>
+                    {title === "International Ports" && (
+                      <span className='hidden text-xs font-normal text-muted-foreground sm:block md:hidden'>
+                        {port.country}
+                      </span>
+                    )}
                   </TableCell>
-                  <TableCell>{port.city}</TableCell>
+                  <TableCell className='hidden sm:table-cell'>
+                    {port.city}
+                  </TableCell>
                   {title === "International Ports" && (
-                    <TableCell>{port.country}</TableCell>
+                    <TableCell className='hidden md:table-cell'>
+                      {port.country}
+                    </TableCell>
                   )}
-                  <TableCell>
+                  <TableCell className='hidden sm:table-cell'>
                     <Badge
                       variant={port.status === "Active" ? "default" : "outline"}
                       className={`capitalize ${
@@ -232,42 +248,46 @@ export default function PortsPage() {
                       {port.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className='w-44'>
-                    <div className='flex gap-4 justify-between'>
+                  <TableCell className='pr-4 sm:pr-6'>
+                    {/* Icon buttons until there is room for their labels. */}
+                    <div className='flex justify-end gap-1'>
                       <Button
                         variant='ghost'
-                        size='icon'
+                        size='sm'
+                        title='Edit'
                         onClick={() => handleEditPort(port)}
                         disabled={isDeletingPort}
-                        className='h-8 w-16 cursor-pointer hover:bg-sky-700/10 text-sky-800 flex items-center'>
+                        className='cursor-pointer text-sky-800 hover:bg-sky-700/10'>
                         <Edit className='h-4 w-4' />
-                        Edit
+                        <span className='sr-only xl:not-sr-only'>Edit</span>
                       </Button>
 
                       <Button
                         variant='ghost'
-                        size='icon'
+                        size='sm'
+                        title='Initiatives'
                         onClick={() => handleManageInitiatives(port.port_id!)}
                         disabled={!port.port_id || isDeletingPort}
-                        className='h-8 cursor-pointer hover:bg-emerald-700/10 w-[6.5rem] text-emerald-800 flex items-center'>
+                        className='cursor-pointer text-emerald-800 hover:bg-emerald-700/10'>
                         <FileText className='h-4 w-4' />
-                        Initiatives
+                        <span className='sr-only xl:not-sr-only'>
+                          Initiatives
+                        </span>
                       </Button>
 
                       <Button
                         variant='ghost'
-                        size='icon'
+                        size='sm'
+                        title='Delete'
                         onClick={() => handleDeletePort(port.port_id!)}
                         disabled={!port.port_id || isDeletingPort}
-                        className='h-8 cursor-pointer w-[5rem] hover:bg-red-700/10 text-red-800 flex items-center'>
+                        className='cursor-pointer text-red-800 hover:bg-red-700/10'>
                         {isDeletingPort && selectedPortId === port.port_id ? (
                           <Loader2 className='h-4 w-4 animate-spin' />
                         ) : (
-                          <span className='flex items-center gap-2'>
-                            <Trash2 className='h-4 w-4' />
-                            Delete
-                          </span>
+                          <Trash2 className='h-4 w-4' />
                         )}
+                        <span className='sr-only xl:not-sr-only'>Delete</span>
                       </Button>
                     </div>
                   </TableCell>
@@ -293,7 +313,7 @@ export default function PortsPage() {
           </p>
         </div>
 
-        <div className='flex flex-wrap gap-2 sm:gap-3'>
+        <div className='flex flex-wrap gap-2 sm:gap-3 md:shrink-0'>
           <Button
             variant='outline'
             className='border-emerald-500 text-emerald-700 hover:bg-emerald-50 cursor-pointer hover:text-emerald-800'
