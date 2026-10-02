@@ -61,5 +61,7 @@ export interface PortFormProps {
   onClose: () => void;
   portType?: "Indian" | "Other" | null;
   indianPorts?: Port[];
+  /** Partner ports of the hub being edited, to preview its route lines. */
+  partnerPorts?: Port[];
   editingPort?: Port | null;
 }

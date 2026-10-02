@@ -409,6 +409,11 @@ export default function PortsPage() {
         editingPort={editingPort}
         portType={addPortType}
         indianPorts={indianPorts}
+        partnerPorts={
+          editingPort
+            ? ports.filter((port) => port.ind_port_name === editingPort.name)
+            : NO_PORTS
+        }
       />
 
       <InitiativeForm

@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
 import { HEX_COLOR, MAX_PORT_CAPACITY } from "@/lib/schemas/port";
 import { PortMapPreview } from "./port-map-preview";
+import { createCurvePath } from "@/lib/map/polylinesCurves";
 
 /**
  * A form number from an input or the API, which returns decimal columns as
@@ -44,6 +45,12 @@ function toNumber(value: number | string | null | undefined) {
     ? undefined
     : Number(value);
 }
+
+/** A port's position; the API returns decimal columns as strings. */
+const toLatLng = (port: Pick<Port, "lat" | "lng">) => ({
+  lat: Number(port.lat),
+  lng: Number(port.lng),
+});
 
 /** Validation rules for a coordinate, matching the API's limits. */
 function coordinateRules(label: string, limit: number) {
@@ -78,7 +85,8 @@ function toFormValues(
       ind_port_name: "",
       ind_port_lat: undefined,
       ind_port_lng: undefined,
-      polyline_curve: undefined,
+      // A gentle northward bow, adjusted with the route curve slider.
+      polyline_curve: portType === "Other" ? 20 : undefined,
       polyline_color: undefined,
     };
   }
@@ -114,6 +122,7 @@ export function PortForm({
   onClose,
   portType,
   indianPorts = [],
+  partnerPorts = [],
   editingPort,
 }: PortFormProps) {
   const [addPort, { isLoading: isAddingPort }] = useAddPortMutation();
@@ -138,9 +147,17 @@ export function PortForm({
     watchedPolylineColor,
     watchedLat,
     watchedLng,
+    watchedCurve,
   ] = useWatch({
     control,
-    name: ["port_location_type", "ind_port_name", "polyline_color", "lat", "lng"],
+    name: [
+      "port_location_type",
+      "ind_port_name",
+      "polyline_color",
+      "lat",
+      "lng",
+      "polyline_curve",
+    ],
   });
 
   const selectedIndianPort = indianPorts.find(
@@ -152,6 +169,67 @@ export function PortForm({
     Math.abs(watchedLat) <= 90 && Math.abs(watchedLng) <= 180
       ? { lat: watchedLat, lng: watchedLng }
       : undefined;
+
+  // The route lines the map will draw: a hub's to each of its partners, or a
+  // partner's from its hub, in the hub's colour.
+  const isHubForm = watchedPortLocationType === "Indian";
+  const hubColor = isHubForm
+    ? watchedPolylineColor
+    : selectedIndianPort?.polyline_color;
+  // Ignore a colour that is still being typed.
+  const previewColor =
+    hubColor && HEX_COLOR.test(hubColor) ? hubColor : undefined;
+  const routes = !position
+    ? []
+    : isHubForm
+      ? partnerPorts.map((partner) => ({
+          key: partner.name,
+          path: createCurvePath(
+            position,
+            toLatLng(partner),
+            Number(partner.polyline_curve ?? 0)
+          ),
+          color: previewColor ?? "",
+        }))
+      : selectedIndianPort
+        ? [
+            {
+              key: selectedIndianPort.name,
+              path: createCurvePath(
+                toLatLng(selectedIndianPort),
+                position,
+                watchedCurve ?? 0
+              ),
+              color: previewColor ?? "",
+            },
+          ]
+        : [];
+
+  // Open the map on the saved port and its saved route lines. Form values
+  // are still being reset when the map first renders, so use the saved port.
+  const savedHub = indianPorts.find(
+    (port) => port.name === editingPort?.ind_port_name
+  );
+  const initialView = !editingPort
+    ? []
+    : editingPort.ind_port_name
+      ? savedHub
+        ? createCurvePath(
+            toLatLng(savedHub),
+            toLatLng(editingPort),
+            Number(editingPort.polyline_curve ?? 0)
+          )
+        : [toLatLng(editingPort)]
+      : [
+          toLatLng(editingPort),
+          ...partnerPorts.flatMap((partner) =>
+            createCurvePath(
+              toLatLng(editingPort),
+              toLatLng(partner),
+              Number(partner.polyline_curve ?? 0)
+            )
+          ),
+        ];
 
   const handlePositionChange = ({ lat, lng }: google.maps.LatLngLiteral) => {
     const options = { shouldDirty: true, shouldValidate: true };
@@ -318,15 +396,68 @@ export function PortForm({
 
               <Separator />
 
-              {/* Section 2: Location */}
+              {/* Section 2: Location and route */}
               <section>
-                <h3 className='text-lg font-medium mb-1'>Location</h3>
+                <h3 className='text-lg font-medium mb-1'>Location and route</h3>
                 <p className='text-sm text-muted-foreground mb-4'>
                   Click the map or drag the pin to place the port, or type its
-                  coordinates.
+                  coordinates. The preview shows the port&apos;s route lines as
+                  they will appear on the map.
                 </p>
                 <div className='grid gap-6 md:grid-cols-[1fr_2fr]'>
                   <div className='space-y-4'>
+                    {watchedPortLocationType === "Other" && (
+                      <div className='space-y-2'>
+                        <Label htmlFor='ind_port_name'>
+                          Connecting Indian Port *
+                        </Label>
+                        <Controller
+                          control={control}
+                          name='ind_port_name'
+                          rules={{
+                            required: "Connecting Indian Port is required",
+                          }}
+                          render={({
+                            field,
+                          }: {
+                            field: ControllerRenderProps<Port, "ind_port_name">;
+                          }) => (
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value || ""}
+                              defaultValue={field.value || ""}>
+                              <SelectTrigger
+                                id='ind_port_name'
+                                className='w-full'>
+                                <SelectValue placeholder='Select an Indian Port' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {indianPorts.length === 0 && (
+                                  <SelectItem
+                                    value='loading'
+                                    disabled>
+                                    Loading Indian ports...
+                                  </SelectItem>
+                                )}
+                                {indianPorts.map((port) => (
+                                  <SelectItem
+                                    key={port.port_id}
+                                    value={port.name}>
+                                    {port.name} ({port.city})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {errors.ind_port_name && (
+                          <p className='text-sm text-destructive'>
+                            {errors.ind_port_name.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <div className='space-y-2'>
                       <Label htmlFor='lat'>Latitude *</Label>
                       <Input
@@ -358,26 +489,92 @@ export function PortForm({
                         </p>
                       )}
                     </div>
+
+                    {watchedPortLocationType === "Indian" && (
+                      <div className='space-y-2'>
+                        <Label htmlFor='polyline_color'>
+                          Route colour *
+                        </Label>
+                        <div className='flex items-center space-x-3'>
+                          <Input
+                            id='polyline_color'
+                            {...register("polyline_color", {
+                              required: "Route colour is required",
+                              pattern: {
+                                value: HEX_COLOR,
+                                message: "Use a hex colour such as #ff0000",
+                              },
+                            })}
+                            placeholder='#FF0000'
+                            className='flex-grow'
+                          />
+                          <Input
+                            type='color'
+                            aria-label='Pick route colour'
+                            onChange={(e) =>
+                              setValue("polyline_color", e.target.value, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              })
+                            }
+                            value={watchedPolylineColor || "#007aff"}
+                            className='h-10 w-12 p-0 border-none rounded-md cursor-pointer appearance-none bg-transparent'
+                            style={{
+                              backgroundColor: watchedPolylineColor || "#007aff",
+                            }}
+                          />
+                        </div>
+                        {errors.polyline_color && (
+                          <p className='text-sm text-destructive'>
+                            {errors.polyline_color.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {watchedPortLocationType === "Other" && (
+                      <div className='space-y-2'>
+                        <div className='flex items-baseline justify-between'>
+                          <Label htmlFor='polyline_curve'>Route curve *</Label>
+                          <output
+                            htmlFor='polyline_curve'
+                            className='text-sm tabular-nums text-muted-foreground'>
+                            {watchedCurve ?? 0}°
+                          </output>
+                        </div>
+                        <input
+                          id='polyline_curve'
+                          type='range'
+                          min={-90}
+                          max={90}
+                          step={1}
+                          aria-describedby='polyline_curve-hint'
+                          {...register("polyline_curve", {
+                            setValueAs: toNumber,
+                            required: "Route curve is required",
+                          })}
+                          className='w-full accent-indigo-600'
+                        />
+                        <p
+                          id='polyline_curve-hint'
+                          className='text-xs text-muted-foreground'>
+                          How far the line bows north (positive) or south
+                          (negative) of a straight route, in degrees.
+                        </p>
+                        {errors.polyline_curve && (
+                          <p className='text-sm text-destructive'>
+                            {errors.polyline_curve.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <PortMapPreview
                     position={position}
                     onPositionChange={handlePositionChange}
-                    initialView={
-                      editingPort
-                        ? [
-                            {
-                              lat: Number(editingPort.lat),
-                              lng: Number(editingPort.lng),
-                            },
-                          ]
-                        : []
-                    }
-                    color={
-                      (watchedPortLocationType === "Indian"
-                        ? watchedPolylineColor
-                        : selectedIndianPort?.polyline_color) || undefined
-                    }
+                    initialView={initialView}
+                    routes={routes}
+                    color={previewColor}
                   />
                 </div>
               </section>
@@ -496,167 +693,6 @@ export function PortForm({
                 </div>
               </section>
 
-              <Separator />
-
-              {/* Section 4: Conditional Fields */}
-              {watchedPortLocationType === "Indian" && (
-                <section className='p-6 rounded-lg border bg-emerald-50/50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'>
-                  <h3 className='text-lg font-medium text-emerald-800 dark:text-emerald-300 mb-2'>
-                    Indian Port Map Settings
-                  </h3>
-                  <p className='text-sm text-emerald-700 dark:text-emerald-400 mb-4'>
-                    Choose the colour of the route lines drawn from this port to
-                    its partner ports. The map frames them automatically.
-                  </p>
-                  <div className='grid md:grid-cols-2 gap-6'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='polyline_color'>
-                        Connection Line Color *
-                      </Label>
-                      <div className='flex items-center space-x-3'>
-                        <Input
-                          id='polyline_color'
-                          {...register("polyline_color", {
-                            required: "Polyline Color is required",
-                            pattern: {
-                              value: HEX_COLOR,
-                              message: "Use a hex colour such as #ff0000",
-                            },
-                          })}
-                          placeholder='#FF0000'
-                          className='flex-grow'
-                        />
-                        <Input
-                          type='color'
-                          aria-label='Pick connection line color'
-                          onChange={(e) =>
-                            setValue("polyline_color", e.target.value, {
-                              shouldDirty: true,
-                              shouldValidate: true,
-                            })
-                          }
-                          value={watchedPolylineColor || "#007aff"} // Default color
-                          className='h-10 w-12 p-0 border-none rounded-md cursor-pointer appearance-none bg-transparent'
-                          style={{
-                            backgroundColor: watchedPolylineColor || "#007aff",
-                          }} // Show selected color
-                        />
-                      </div>
-                      {errors.polyline_color && (
-                        <p className='text-sm text-destructive'>
-                          {errors.polyline_color.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              {watchedPortLocationType === "Other" && (
-                <section className='p-6 rounded-lg border bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800'>
-                  <h3 className='text-lg font-medium text-indigo-800 dark:text-indigo-300 mb-2'>
-                    Connect to Indian Port
-                  </h3>
-                  <p className='text-sm text-indigo-700 dark:text-indigo-400 mb-4'>
-                    Select the Indian port this location connects to for mapping
-                    purposes.
-                  </p>
-                  <div className='grid md:grid-cols-2 gap-6'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='ind_port_name'>
-                        Connecting Indian Port *
-                      </Label>
-                      <Controller
-                        control={control}
-                        name='ind_port_name'
-                        rules={{
-                          required: "Connecting Indian Port is required",
-                        }}
-                        render={({
-                          field,
-                        }: {
-                          field: ControllerRenderProps<Port, "ind_port_name">;
-                        }) => (
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || ""}
-                            defaultValue={field.value || ""}>
-                            <SelectTrigger
-                              id='ind_port_name'
-                              className='w-full'>
-                              <SelectValue placeholder='Select an Indian Port' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {indianPorts.length === 0 && (
-                                <SelectItem
-                                  value='loading'
-                                  disabled>
-                                  Loading Indian ports...
-                                </SelectItem>
-                              )}
-                              {indianPorts.map((port) => (
-                                <SelectItem
-                                  key={port.port_id}
-                                  value={port.name}>
-                                  {port.name} ({port.city})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      {errors.ind_port_name && (
-                        <p className='text-sm text-destructive'>
-                          {errors.ind_port_name.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className='space-y-2'>
-                      <Label htmlFor='polyline_curve'>
-                        Map Line Curve Factor *
-                      </Label>
-                      <Input
-                        id='polyline_curve'
-                        type='number'
-                        step='1'
-                        min='-90'
-                        max='90'
-                        {...register("polyline_curve", {
-                          setValueAs: toNumber,
-                          required: "Polyline Curve factor is required",
-                        })}
-                        placeholder='E.g., 20 (degrees the line bows out)'
-                      />
-                      {errors.polyline_curve && (
-                        <p className='text-sm text-destructive'>
-                          {errors.polyline_curve.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {selectedIndianPort && (
-                    <div className='mt-4 p-3 bg-background rounded-md border border-indigo-200 dark:border-indigo-800 shadow-sm'>
-                      <p className='text-sm font-medium text-indigo-700 dark:text-indigo-400'>
-                        Selected Indian Port Details:
-                      </p>
-                      <div className='grid grid-cols-2 gap-2 mt-1 text-sm'>
-                        <p>
-                          <span className='text-muted-foreground'>Lat:</span>{" "}
-                          {selectedIndianPort.lat}
-                        </p>
-                        <p>
-                          <span className='text-muted-foreground'>Lng:</span>{" "}
-                          {selectedIndianPort.lng}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Hidden fields for lat/lng are not needed if selectedIndianPort is used */}
-                </section>
-              )}
               <CardFooter className='flex justify-end space-x-3 mt-6 pt-6 border-t'>
                 <Button
                   type='button'

@@ -4,8 +4,10 @@ import {
   AdvancedMarker,
   APIProvider,
   Map,
+  Polyline,
   useMap,
 } from "@vis.gl/react-google-maps";
+import type { Route } from "@/lib/map/routes";
 
 type LatLng = google.maps.LatLngLiteral;
 
@@ -15,6 +17,8 @@ interface Props {
   onPositionChange: (position: LatLng) => void;
   /** Places to fit in view when the map opens, such as the saved position. */
   initialView: LatLng[];
+  /** Route lines to draw, as the public map would. */
+  routes?: Route[];
   color?: string;
 }
 
@@ -43,7 +47,9 @@ function boundsOf(points: LatLng[]) {
 function KeepInView({ position }: { position: LatLng | undefined }) {
   const map = useMap();
   useEffect(() => {
-    if (map && position && !map.getBounds()?.contains(position)) {
+    // Bounds are unknown until the map has first rendered its initial view.
+    const bounds = map?.getBounds();
+    if (map && bounds && position && !bounds.contains(position)) {
       map.panTo(position);
     }
   }, [map, position]);
@@ -51,12 +57,14 @@ function KeepInView({ position }: { position: LatLng | undefined }) {
 }
 
 /**
- * A small map for placing a port: click to move it, or drag its pin.
+ * A small map for placing a port: click to move it, or drag its pin. Its route
+ * lines follow as it moves.
  */
 export function PortMapPreview({
   position,
   onPositionChange,
   initialView,
+  routes = [],
   color = "#0f172a",
 }: Props) {
   // A single point has no extent to fit, so it gets a regional zoom instead.
@@ -82,6 +90,15 @@ export function PortMapPreview({
             if (event.detail.latLng)
               onPositionChange(toPosition(event.detail.latLng));
           }}>
+          {routes.map(({ key, path, color: routeColor }) => (
+            <Polyline
+              key={key}
+              path={path}
+              strokeColor={routeColor}
+              strokeOpacity={1}
+              strokeWeight={1.5}
+            />
+          ))}
           {position && (
             <AdvancedMarker
               position={position}
