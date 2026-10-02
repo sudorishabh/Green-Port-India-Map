@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 // Same defaults helmet applied to the old Express API (CSP disabled).
-// Scoped to /api: `Referrer-Policy: no-referrer` on pages would stop the
-// Referer header that OpenStreetMap's tile servers require of websites.
+// Scoped to /api, the routes the Express API served, so pages keep the
+// browser's defaults.
 const apiSecurityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
