@@ -6,7 +6,12 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { LatLngBoundsLiteral, Map as LeafletMap } from "leaflet";
+import {
+  LatLngBoundsLiteral,
+  LeafletEvent,
+  Map as LeafletMap,
+  Path,
+} from "leaflet";
 import { MapContainer, Polyline, ZoomControl } from "react-leaflet";
 import Marker from "@/components/map/Marker/Marker";
 import { KPIS, Port } from "@/lib/map/types";
@@ -91,8 +96,18 @@ function framePadding(isPanelOpen: boolean): FramePadding {
 }
 
 /**
+ * Measures a line as 1 long, whatever its length on screen, so CSS can draw
+ * every line in over the same time.
+ */
+const MEASURE_AS_ONE = {
+  add: (event: LeafletEvent) =>
+    (event.target as Path).getElement()?.setAttribute("pathLength", "1"),
+};
+
+/**
  * Every route, drawn faintly so the whole trade network shows at a glance, and
- * fainter still while some are highlighted.
+ * fainter still while some are highlighted. The lines draw themselves out from
+ * the hubs when the map opens.
  */
 const NetworkLines = ({
   routes,
@@ -107,6 +122,8 @@ const NetworkLines = ({
       positions={path}
       // Only drawn to be seen: clicks on a line go through to the map.
       interactive={false}
+      className='route-draw'
+      eventHandlers={MEASURE_AS_ONE}
       pathOptions={{ color, opacity: isFaded ? 0.15 : 0.45, weight: 1.5 }}
     />
   ));

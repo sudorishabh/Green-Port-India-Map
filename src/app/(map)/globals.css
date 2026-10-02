@@ -209,8 +209,28 @@
   }
 }
 
+/*
+  The trade network drawing itself out from the hubs when the map opens. Each
+  line is measured as 1 long (MapBoard sets pathLength), so a single dash
+  covers it and sliding that dash in reveals it.
+*/
+.route-draw {
+  stroke-dasharray: 1;
+  animation: route-draw 1.6s ease-out both;
+}
+
+@keyframes route-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .route-flow {
+  .route-flow,
+  .route-draw {
     animation: none;
   }
 }
