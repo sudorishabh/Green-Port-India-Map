@@ -18,28 +18,40 @@ interface Props {
 /**
  * A port on the map. Hubs are large leaf badges, partner ports small dots, both
  * in the hub's route colour so each trade network reads as one group. Inactive
- * ports are grey.
+ * ports are grey. On the map, hubs sit in a soft halo of their colour, and a
+ * highlighted port's halo pulses.
  */
 const PortPin = ({ port, color, isHighlighted, compact = false }: Props) => {
   const hub = isHub(port);
   const active = isActive(port);
+  const fill = active ? color || FALLBACK_PIN_COLOR : INACTIVE_PIN_COLOR;
 
   return (
     <span
-      className={`flex items-center justify-center rounded-full border-2 border-white shadow-md transition-transform duration-150 ${
-        hub ? (compact ? "size-6" : "size-8") : compact ? "size-3" : "size-4"
-      } ${isHighlighted ? "scale-125" : ""} ${active ? "" : "opacity-70"}`}
-      style={{
-        backgroundColor: active
-          ? color || FALLBACK_PIN_COLOR
-          : INACTIVE_PIN_COLOR,
-      }}>
-      {hub && (
-        <FontAwesomeIcon
-          icon={faLeaf}
-          className={`text-white ${compact ? "size-3" : "size-4"}`}
+      className={`relative flex transition-transform duration-150 ${
+        isHighlighted ? "scale-125" : ""
+      } ${active ? "" : "opacity-70"}`}>
+      {!compact && (hub || isHighlighted) && (
+        <span
+          aria-hidden
+          className={`absolute -inset-1 rounded-full opacity-25 ${
+            isHighlighted ? "motion-safe:animate-ping" : ""
+          }`}
+          style={{ backgroundColor: fill }}
         />
       )}
+      <span
+        className={`relative flex items-center justify-center rounded-full border-2 border-white shadow-md ${
+          hub ? (compact ? "size-6" : "size-8") : compact ? "size-3" : "size-4"
+        }`}
+        style={{ backgroundColor: fill }}>
+        {hub && (
+          <FontAwesomeIcon
+            icon={faLeaf}
+            className={`text-white ${compact ? "size-3" : "size-4"}`}
+          />
+        )}
+      </span>
     </span>
   );
 };

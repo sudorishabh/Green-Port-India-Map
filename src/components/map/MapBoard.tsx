@@ -13,7 +13,12 @@ import { KPIS, Port } from "@/lib/map/types";
 import ModalWindow from "./ModalWindow/ModalWindow";
 import { frameRoutes, FramePadding } from "@/lib/map/frame";
 import { getRoutes, Route } from "@/lib/map/routes";
-import { findHub, isHub, partnersOf } from "@/lib/map/ports";
+import {
+  connectedPorts,
+  findHub,
+  isHub,
+  partnersOf,
+} from "@/lib/map/ports";
 import Loader from "./Loader";
 import PortsPanel, { PANEL_WIDTH } from "./PortsPanel";
 import { PortSummary } from "./Marker/MarkerCard";
@@ -179,6 +184,14 @@ const MapBoard = ({
       ),
     ];
   }, [selectedRoutes, hoveredPort, ports]);
+  const focusedPortIds = useMemo(() => {
+    const focused = [clickedPort, hoveredPort].flatMap((port) =>
+      port ? connectedPorts(port, ports) : [],
+    );
+    return focused.length
+      ? new Set(focused.map(({ port_id }) => port_id))
+      : null;
+  }, [clickedPort, hoveredPort, ports]);
 
   // Frame a newly selected port with all of its routes, and again when the
   // layout changes, such as when a phone is rotated.
@@ -255,6 +268,7 @@ const MapBoard = ({
           clickedPort={clickedPort}
           setHoveredPort={setHoveredPort}
           hoveredPort={hoveredPort}
+          focusedPortIds={focusedPortIds}
         />
       </MapContainer>
       {/* The guide panel takes the top left, and compact screens have no
