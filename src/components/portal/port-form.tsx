@@ -32,9 +32,19 @@ import { useUpdatePortMutation } from "@/lib/portal/features/ports/portsApiSlice
 import { toast } from "sonner";
 import { getApiErrorMessage } from "@/lib/portal/api-errors";
 import { HEX_COLOR, MAX_PORT_CAPACITY } from "@/lib/schemas/port";
-import { PortMapPreview } from "./port-map-preview";
 import { createCurvePath } from "@/lib/map/polylinesCurves";
 import type { LatLngLiteral } from "leaflet";
+import dynamic from "next/dynamic";
+
+// Leaflet needs the browser's window as soon as it loads, so the map is never
+// rendered on the server.
+const PortMapPreview = dynamic(
+  () => import("./port-map-preview").then((preview) => preview.PortMapPreview),
+  {
+    ssr: false,
+    loading: () => <div className='h-72 rounded-lg border bg-muted' />,
+  }
+);
 
 /**
  * A form number from an input or the API, which returns decimal columns as
