@@ -129,3 +129,23 @@
     transform: translate(-100%, 0);
   }
 }
+
+/*
+  Dots running along a highlighted route, from the hub out to the partner
+  port. One step is the line's dash pattern ("1 19"), so the loop is seamless.
+*/
+.route-flow {
+  animation: route-flow 1s linear infinite;
+}
+
+@keyframes route-flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-flow {
+    animation: none;
+  }
+}
