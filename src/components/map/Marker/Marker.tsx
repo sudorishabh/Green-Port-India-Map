@@ -1,5 +1,5 @@
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import MarkerCard from "./MarkerCard";
 import { Port } from "@/lib/map/types";
 import PortPin, { FALLBACK_PIN_COLOR } from "./PortPin";
@@ -9,36 +9,19 @@ interface MarkersProps {
   ports: Port[];
   onOpenDetails: (port: Port) => void;
   setClickedPort: (port: Port | null) => void;
-  setDefaultZoom: (defaultZoom: number) => void;
   clickedPort: Port | null;
   setHoveredPort: (port: Port | null) => void;
   hoveredPort: Port | null;
-  setDefaultCenter: (defaultCenter: { lat: number; lng: number }) => void;
 }
 
 const Markers: React.FC<MarkersProps> = ({
   ports,
   onOpenDetails,
   setClickedPort,
-  setDefaultZoom,
   clickedPort,
   setHoveredPort,
   hoveredPort,
-  setDefaultCenter,
 }) => {
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 900);
-    };
-
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   const hubColors = useMemo(
     () =>
       new Map(ports.filter(isHub).map((hub) => [hub.name, hub.polyline_color])),
@@ -57,34 +40,10 @@ const Markers: React.FC<MarkersProps> = ({
   const handleClickMarker = useCallback(
     (port: Port) => {
       // A second click on the selected port opens its details.
-      if (clickedPort?.port_id === port.port_id) {
-        onOpenDetails(port);
-        return;
-      }
-      setClickedPort(port);
-
-      if (!isMobile && port && !port.ind_port_name) {
-        const settings = {
-          center: {
-            lat: Number(port.zoom_center_lat),
-            lng: Number(port.zoom_center_lng),
-          },
-          zoom: Number(port.zoom),
-        };
-        if (settings) {
-          setDefaultCenter(settings.center);
-          setDefaultZoom(settings.zoom);
-        }
-      }
+      if (clickedPort?.port_id === port.port_id) onOpenDetails(port);
+      else setClickedPort(port);
     },
-    [
-      clickedPort,
-      onOpenDetails,
-      setClickedPort,
-      isMobile,
-      setDefaultCenter,
-      setDefaultZoom,
-    ]
+    [clickedPort, onOpenDetails, setClickedPort]
   );
 
   return (
