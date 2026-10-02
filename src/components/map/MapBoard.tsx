@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -12,7 +13,7 @@ import { KPIS, Port } from "@/lib/map/types";
 import ModalWindow from "./ModalWindow/ModalWindow";
 import { frameRoutes, FramePadding } from "@/lib/map/frame";
 import { getRoutes, Route } from "@/lib/map/routes";
-import { findHub, partnersOf } from "@/lib/map/ports";
+import { connectedPorts, findHub, isHub, partnersOf } from "@/lib/map/ports";
 import Loader from "./Loader";
 import PortsPanel, { PANEL_WIDTH } from "./PortsPanel";
 import { PortSummary } from "./Marker/MarkerCard";
@@ -23,7 +24,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 // India center and coordinates
-const DEFAULT_ZOOM = 3.2;
+const DEFAULT_ZOOM = 3.5;
 const DEFAULT_COORDS = { lat: 23, lng: 78.7861 };
 
 const MIN_ZOOM = 3;
@@ -84,15 +85,44 @@ function framePadding(isPanelOpen: boolean): FramePadding {
   };
 }
 
-const RouteLines = ({ routes }: { routes: Route[] }) =>
+/**
+ * Every route, drawn faintly so the whole trade network shows at a glance, and
+ * fainter still while some are highlighted.
+ */
+const NetworkLines = ({
+  routes,
+  isFaded,
+}: {
+  routes: Route[];
+  isFaded: boolean;
+}) =>
   routes.map(({ key, path, color }) => (
     <Polyline
       key={key}
       positions={path}
       // Only drawn to be seen: clicks on a line go through to the map.
       interactive={false}
-      pathOptions={{ color, opacity: 1, weight: 1.5 }}
+      pathOptions={{ color, opacity: isFaded ? 0.15 : 0.45, weight: 1.5 }}
     />
+  ));
+
+/**
+ * The routes of the selected or hovered port: a soft glow and the line itself.
+ */
+const HighlightedLines = ({ routes }: { routes: Route[] }) =>
+  routes.map(({ key, path, color }) => (
+    <Fragment key={key}>
+      <Polyline
+        positions={path}
+        interactive={false}
+        pathOptions={{ color, opacity: 0.15, weight: 9 }}
+      />
+      <Polyline
+        positions={path}
+        interactive={false}
+        pathOptions={{ color, opacity: 1, weight: 3 }}
+      />
+    </Fragment>
   ));
 
 const MapBoard = ({
@@ -117,18 +147,32 @@ const MapBoard = ({
   const isCompact = useIsCompact();
   const isPanelOpen = panelOpen ?? !isCompact;
 
+  const networkRoutes = useMemo(
+    () => ports.filter(isHub).flatMap((hub) => getRoutes(hub, ports)),
+    [ports],
+  );
   const selectedRoutes = useMemo(
     () => getRoutes(clickedPort, ports),
     [clickedPort, ports],
   );
-  // A selected port's routes are already drawn, so hovering it adds nothing.
-  const hoveredRoutes = useMemo(
-    () =>
-      hoveredPort?.port_id === clickedPort?.port_id
-        ? []
-        : getRoutes(hoveredPort, ports),
-    [hoveredPort, clickedPort, ports],
-  );
+  // Hovering adds the hovered port's routes to the selected port's, once each.
+  const highlightedRoutes = useMemo(() => {
+    const selectedKeys = new Set(selectedRoutes.map(({ key }) => key));
+    return [
+      ...selectedRoutes,
+      ...getRoutes(hoveredPort, ports).filter(
+        ({ key }) => !selectedKeys.has(key),
+      ),
+    ];
+  }, [selectedRoutes, hoveredPort, ports]);
+  const focusedPortIds = useMemo(() => {
+    const focused = [clickedPort, hoveredPort].flatMap((port) =>
+      port ? connectedPorts(port, ports) : [],
+    );
+    return focused.length
+      ? new Set(focused.map(({ port_id }) => port_id))
+      : null;
+  }, [clickedPort, hoveredPort, ports]);
 
   // Frame a newly selected port with all of its routes, and again when the
   // layout changes, such as when a phone is rotated.
@@ -194,14 +238,18 @@ const MapBoard = ({
         className='isolate h-full'>
         <BaseMap type={mapType} />
         <ZoomControl position='bottomright' />
-        <RouteLines routes={selectedRoutes} />
-        <RouteLines routes={hoveredRoutes} />
+        <NetworkLines
+          routes={networkRoutes}
+          isFaded={highlightedRoutes.length > 0}
+        />
+        <HighlightedLines routes={highlightedRoutes} />
         <Marker
           ports={ports}
           onSelect={handleSelectPort}
           clickedPort={clickedPort}
           setHoveredPort={setHoveredPort}
           hoveredPort={hoveredPort}
+          focusedPortIds={focusedPortIds}
         />
       </MapContainer>
       {/* The guide panel takes the top left, and compact screens have no

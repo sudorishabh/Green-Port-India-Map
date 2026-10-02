@@ -12,6 +12,11 @@ interface MarkersProps {
   clickedPort: Port | null;
   setHoveredPort: (port: Port | null) => void;
   hoveredPort: Port | null;
+  /**
+   * The ports joined by the highlighted routes, or null when none are. Other
+   * ports fade back.
+   */
+  focusedPortIds: Set<number> | null;
 }
 
 const Markers: React.FC<MarkersProps> = ({
@@ -20,6 +25,7 @@ const Markers: React.FC<MarkersProps> = ({
   clickedPort,
   setHoveredPort,
   hoveredPort,
+  focusedPortIds,
 }) => {
   const hubColors = useMemo(
     () =>
@@ -59,7 +65,12 @@ const Markers: React.FC<MarkersProps> = ({
             eventHandlers={{ click: () => onSelect(port) }}>
             <span
               onMouseEnter={() => setHoveredPort(port)}
-              onMouseLeave={() => setHoveredPort(null)}>
+              onMouseLeave={() => setHoveredPort(null)}
+              className={`transition-opacity duration-200 ${
+                focusedPortIds && !focusedPortIds.has(port.port_id)
+                  ? "opacity-40"
+                  : ""
+              }`}>
               <PortPin
                 port={port}
                 color={color}

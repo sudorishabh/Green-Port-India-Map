@@ -13,5 +13,15 @@ export const findHub = (port: Port, allPorts: Port[]) =>
 export const partnersOf = (hub: Port, allPorts: Port[]) =>
   allPorts.filter((p) => p.ind_port_name === hub.name);
 
+/**
+ * `port` and the ports at the other end of its routes: a hub's partners, or a
+ * partner port's hub.
+ */
+export const connectedPorts = (port: Port, allPorts: Port[]) => {
+  if (isHub(port)) return [port, ...partnersOf(port, allPorts)];
+  const hub = findHub(port, allPorts);
+  return hub ? [hub, port] : [port];
+};
+
 /** Ports saved before statuses were capitalised may still say "active". */
 export const isActive = (port: Port) => port.status.toLowerCase() === "active";
