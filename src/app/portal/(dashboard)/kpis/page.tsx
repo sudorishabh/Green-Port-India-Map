@@ -218,11 +218,17 @@ export default function KpisPage() {
             <Table>
               <TableHeader className='bg-muted/30'>
                 <TableRow>
-                  <TableHead className='pl-6 w-[20%]'>Category</TableHead>
-                  <TableHead className='w-[30%]'>KPI</TableHead>
-                  <TableHead>International Target</TableHead>
-                  <TableHead>National Target</TableHead>
-                  <TableHead className='text-right pr-6 w-44'>
+                  <TableHead className='hidden w-[18%] pl-6 md:table-cell'>
+                    Category
+                  </TableHead>
+                  <TableHead className='pl-4 sm:pl-6 md:pl-2'>KPI</TableHead>
+                  <TableHead className='hidden xl:table-cell'>
+                    International Target
+                  </TableHead>
+                  <TableHead className='hidden xl:table-cell'>
+                    National Target
+                  </TableHead>
+                  <TableHead className='pr-4 text-right sm:pr-6'>
                     Actions
                   </TableHead>
                 </TableRow>
@@ -246,42 +252,60 @@ export default function KpisPage() {
                       <TableRow
                         key={kpiObject.kpi_id}
                         className='hover:bg-muted/50 transition-colors'>
-                        <TableCell className='font-medium pl-6'>
+                        <TableCell className='hidden pl-6 font-medium whitespace-normal md:table-cell'>
                           {kpiObject.kpi_category}
                         </TableCell>
-                        <TableCell className='max-w-xs truncate'>
+                        <TableCell className='pl-4 whitespace-normal sm:pl-6 md:pl-2'>
+                          {/* The category column is hidden on small screens. */}
+                          <span className='block text-xs text-muted-foreground md:hidden'>
+                            {kpiObject.kpi_category}
+                          </span>
                           {kpiObject.kpi}
                         </TableCell>
-                        <TableCell>
-                          {kpiObject.kpi_international_target}
+                        {/* Targets are long, so they wrap and are cut to three lines. */}
+                        <TableCell className='hidden max-w-xs whitespace-normal xl:table-cell'>
+                          <p
+                            className='line-clamp-3'
+                            title={kpiObject.kpi_international_target}>
+                            {kpiObject.kpi_international_target}
+                          </p>
                         </TableCell>
-                        <TableCell>{kpiObject.kpi_national_target}</TableCell>
-                        <TableCell className='text-right pr-6'>
-                          <div className='flex gap-2 justify-end'>
+                        <TableCell className='hidden max-w-xs whitespace-normal xl:table-cell'>
+                          <p
+                            className='line-clamp-3'
+                            title={kpiObject.kpi_national_target}>
+                            {kpiObject.kpi_national_target}
+                          </p>
+                        </TableCell>
+                        <TableCell className='pr-4 text-right sm:pr-6'>
+                          {/* Icon buttons until there is room for their labels. */}
+                          <div className='flex justify-end gap-1'>
                             <Button
                               variant='ghost'
                               size='sm'
-                              onClick={() =>
-                                handleEditKpi(item)
-                              }
+                              title='Edit'
+                              onClick={() => handleEditKpi(item)}
                               disabled={isDeletingKpi || isLoadingForm}
-                              className='h-8 cursor-pointer hover:bg-sky-700/10 text-sky-800 flex items-center'>
-                              <Edit className='h-4 w-4 mr-1' />
-                              Edit
+                              className='cursor-pointer text-sky-800 hover:bg-sky-700/10'>
+                              <Edit className='h-4 w-4' />
+                              <span className='sr-only 2xl:not-sr-only'>Edit</span>
                             </Button>
                             <Button
                               variant='ghost'
                               size='sm'
+                              title='Delete'
                               onClick={() => handleDeleteKpi(kpiObject.kpi_id)}
                               disabled={isDeletingKpi || isLoadingForm}
-                              className='h-8 cursor-pointer hover:bg-red-700/10 text-red-800 flex items-center'>
+                              className='cursor-pointer text-red-800 hover:bg-red-700/10'>
                               {isDeletingKpi &&
                               isKpi?.kpiData.kpi_id === kpiObject.kpi_id ? (
-                                <Loader2 className='h-4 w-4 animate-spin mr-1' />
+                                <Loader2 className='h-4 w-4 animate-spin' />
                               ) : (
-                                <Trash2 className='h-4 w-4 mr-1' />
+                                <Trash2 className='h-4 w-4' />
                               )}
-                              Delete
+                              <span className='sr-only 2xl:not-sr-only'>
+                                Delete
+                              </span>
                             </Button>
                           </div>
                         </TableCell>
