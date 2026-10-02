@@ -152,8 +152,8 @@ export default function PortsPage() {
     searchValue: string,
     onSearchChange: (value: string) => void
   ) => (
-    <Card className='shadow-md border-border/40 rounded-lg overflow-hidden bg-card'>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 p-4 bg-muted/50 border-b'>
+    <Card className='gap-0 py-0 shadow-md border-border/40 rounded-lg overflow-hidden bg-card'>
+      <CardHeader className='flex flex-col gap-3 space-y-0 border-b bg-muted/50 p-4 sm:flex-row sm:items-center sm:justify-between'>
         <div className='flex items-center gap-3'>
           {/* Icon based on title */}
           {title === "Indian Ports" ? (
@@ -171,39 +171,38 @@ export default function PortsPage() {
             }`}>
             {ports.length}
           </Badge>
-          <CardDescription className='hidden md:block text-sm pl-2'>
+          <CardDescription className='hidden xl:block text-sm pl-2'>
             {description}
           </CardDescription>
         </div>
-        <div className='relative w-full max-w-xs'>
+        <div className='relative w-full sm:max-w-xs'>
           <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
           <Input
-            placeholder='Search by name, city, country...' // More descriptive placeholder
+            placeholder='Search by name, city, country...'
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            className='pl-9 h-9 rounded-md' // Adjusted padding and height
+            className='pl-9 h-9 rounded-md'
           />
         </div>
       </CardHeader>
       <CardContent className='p-0'>
-        {/* Use Table component directly */}
         <Table>
           <TableHeader className='bg-muted/30'>
             <TableRow>
-              <TableHead className='pl-6 w-[30%]'>Name</TableHead>
-              <TableHead>City</TableHead>
+              <TableHead className='pl-4 sm:pl-6'>Name</TableHead>
+              <TableHead className='hidden sm:table-cell'>City</TableHead>
               {title === "International Ports" && (
-                <TableHead>Country</TableHead>
+                <TableHead className='hidden md:table-cell'>Country</TableHead>
               )}
-              <TableHead>Status</TableHead>
-              <TableHead className='w-44'>Actions</TableHead>
+              <TableHead className='hidden sm:table-cell'>Status</TableHead>
+              <TableHead className='pr-4 text-right sm:pr-6'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {ports.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={title === "International Ports" ? 5 : 4} // Adjust colSpan
+                  colSpan={title === "International Ports" ? 5 : 4}
                   className='h-24 text-center text-muted-foreground italic pl-6'>
                   {searchValue
                     ? "No matching ports found."
@@ -215,14 +214,30 @@ export default function PortsPage() {
                 <TableRow
                   key={port.port_id}
                   className='hover:bg-muted/50 transition-colors'>
-                  <TableCell className='font-medium pl-6'>
+                  <TableCell className='pl-4 font-medium whitespace-normal sm:pl-6'>
                     {port.name}
+                    {/* Columns hidden on small screens fold in under the name. */}
+                    <span className='block text-xs font-normal text-muted-foreground sm:hidden'>
+                      {title === "International Ports"
+                        ? `${port.city}, ${port.country}`
+                        : port.city}
+                      {port.status !== "Active" && ` · ${port.status}`}
+                    </span>
+                    {title === "International Ports" && (
+                      <span className='hidden text-xs font-normal text-muted-foreground sm:block md:hidden'>
+                        {port.country}
+                      </span>
+                    )}
                   </TableCell>
-                  <TableCell>{port.city}</TableCell>
+                  <TableCell className='hidden sm:table-cell'>
+                    {port.city}
+                  </TableCell>
                   {title === "International Ports" && (
-                    <TableCell>{port.country}</TableCell>
+                    <TableCell className='hidden md:table-cell'>
+                      {port.country}
+                    </TableCell>
                   )}
-                  <TableCell>
+                  <TableCell className='hidden sm:table-cell'>
                     <Badge
                       variant={port.status === "Active" ? "default" : "outline"}
                       className={`capitalize ${
@@ -233,42 +248,46 @@ export default function PortsPage() {
                       {port.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className='w-44'>
-                    <div className='flex gap-4 justify-between'>
+                  <TableCell className='pr-4 sm:pr-6'>
+                    {/* Icon buttons until there is room for their labels. */}
+                    <div className='flex justify-end gap-1'>
                       <Button
                         variant='ghost'
-                        size='icon'
+                        size='sm'
+                        title='Edit'
                         onClick={() => handleEditPort(port)}
                         disabled={isDeletingPort}
-                        className='h-8 w-16 cursor-pointer hover:bg-sky-700/10 text-sky-800 flex items-center'>
+                        className='cursor-pointer text-sky-800 hover:bg-sky-700/10'>
                         <Edit className='h-4 w-4' />
-                        Edit
+                        <span className='sr-only xl:not-sr-only'>Edit</span>
                       </Button>
 
                       <Button
                         variant='ghost'
-                        size='icon'
+                        size='sm'
+                        title='Initiatives'
                         onClick={() => handleManageInitiatives(port.port_id!)}
                         disabled={!port.port_id || isDeletingPort}
-                        className='h-8 cursor-pointer hover:bg-emerald-700/10 w-[6.5rem] text-emerald-800 flex items-center'>
+                        className='cursor-pointer text-emerald-800 hover:bg-emerald-700/10'>
                         <FileText className='h-4 w-4' />
-                        Initiatives
+                        <span className='sr-only xl:not-sr-only'>
+                          Initiatives
+                        </span>
                       </Button>
 
                       <Button
                         variant='ghost'
-                        size='icon'
+                        size='sm'
+                        title='Delete'
                         onClick={() => handleDeletePort(port.port_id!)}
                         disabled={!port.port_id || isDeletingPort}
-                        className='h-8 cursor-pointer w-[5rem] hover:bg-red-700/10 text-red-800 flex items-center'>
+                        className='cursor-pointer text-red-800 hover:bg-red-700/10'>
                         {isDeletingPort && selectedPortId === port.port_id ? (
                           <Loader2 className='h-4 w-4 animate-spin' />
                         ) : (
-                          <span className='flex items-center gap-2'>
-                            <Trash2 className='h-4 w-4' />
-                            Delete
-                          </span>
+                          <Trash2 className='h-4 w-4' />
                         )}
+                        <span className='sr-only xl:not-sr-only'>Delete</span>
                       </Button>
                     </div>
                   </TableCell>
@@ -282,11 +301,11 @@ export default function PortsPage() {
   );
 
   return (
-    <div className='container mx-auto py-8 px-4 md:px-6 lg:px-8'>
+    <div className='mx-auto max-w-7xl'>
       {/* Page Header */}
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
+      <div className='mb-6 flex flex-col gap-4 sm:mb-8 md:flex-row md:items-center md:justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight text-foreground'>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground sm:text-3xl'>
             Ports Management
           </h1>
           <p className='text-muted-foreground mt-1'>
@@ -294,7 +313,7 @@ export default function PortsPage() {
           </p>
         </div>
 
-        <div className='flex space-x-3 mt-4 md:mt-0'>
+        <div className='flex flex-wrap gap-2 sm:gap-3 md:shrink-0'>
           <Button
             variant='outline'
             className='border-emerald-500 text-emerald-700 hover:bg-emerald-50 cursor-pointer hover:text-emerald-800'
@@ -339,7 +358,7 @@ export default function PortsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='flex justify-center space-x-3 mt-2'>
+            <div className='flex flex-wrap justify-center gap-3 mt-2'>
               <Button
                 variant='outline'
                 className='border-emerald-500 text-emerald-700 hover:bg-emerald-50 cursor-pointer hover:text-emerald-800'
@@ -361,7 +380,7 @@ export default function PortsPage() {
         <Tabs
           defaultValue='indian'
           className='w-full mt-8'>
-          <TabsList className='grid w-full sm:w-[400px] grid-cols-2 mb-6 bg-muted p- rounded-lg'>
+          <TabsList className='mb-6 grid w-full grid-cols-2 rounded-lg bg-muted sm:w-[400px]'>
             <TabsTrigger
               value='indian'
               className='data-[state=active]:bg-background data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm  rounded-md cursor-pointer text-sm font-medium transition-all flex items-center justify-center gap-2'>
@@ -409,6 +428,11 @@ export default function PortsPage() {
         editingPort={editingPort}
         portType={addPortType}
         indianPorts={indianPorts}
+        partnerPorts={
+          editingPort
+            ? ports.filter((port) => port.ind_port_name === editingPort.name)
+            : NO_PORTS
+        }
       />
 
       <InitiativeForm

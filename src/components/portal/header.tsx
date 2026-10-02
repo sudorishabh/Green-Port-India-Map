@@ -9,6 +9,7 @@ import { portalRoutes } from "@/lib/portal/routes";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
+import { PortalNav } from "./nav";
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -27,15 +28,23 @@ const Header = () => {
   };
 
   return (
-    <header className=' w-full top-0 z-30 h-14 border-b bg-white px-4 flex items-center justify-between'>
-      <h1 className='text-xl font-semibold'>Sustainable Roadmap Portal</h1>
-      <div className='flex items-center gap-4'>
+    <header className='sticky top-0 z-30 border-b bg-white'>
+      <div className='flex h-14 items-center justify-between gap-3 px-4 sm:px-6'>
+        <h1 className='truncate text-base font-semibold sm:text-xl'>
+          Sustainable Roadmap Portal
+        </h1>
         <Button
-          className='border-sky-700 border bg-white text-sky-700 hover:bg-sky-700 hover:text-white cursor-pointer'
+          className='shrink-0 border-sky-700 border bg-white text-sky-700 hover:bg-sky-700 hover:text-white cursor-pointer'
           onClick={handleLogout}
-          disabled={isLoading}>
-          Logout <LogOut />
+          disabled={isLoading}
+          aria-label='Logout'>
+          <span className='hidden sm:inline'>Logout</span>
+          <LogOut />
         </Button>
+      </div>
+      {/* Below large screens the section links sit here instead of a sidebar. */}
+      <div className='lg:hidden'>
+        <PortalNav variant='tabs' />
       </div>
     </header>
   );

@@ -132,7 +132,7 @@ export default function KpisPage() {
 
   if (getKpisError) {
     return (
-      <div className='container mx-auto py-8 px-4 md:px-6 lg:px-8 text-red-600'>
+      <div className='mx-auto max-w-7xl text-red-600'>
         Error loading KPIs. Please try again later.
       </div>
     );
@@ -141,10 +141,10 @@ export default function KpisPage() {
   const isLoadingForm = isAddingKpi || isUpdatingKpi;
 
   return (
-    <div className='container mx-auto py-8 px-4 md:px-6 lg:px-8'>
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
+    <div className='mx-auto max-w-7xl'>
+      <div className='mb-6 flex flex-col gap-4 sm:mb-8 md:flex-row md:items-center md:justify-between'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight text-foreground'>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground sm:text-3xl'>
             KPI Management
           </h1>
           <p className='text-muted-foreground mt-1'>
@@ -153,7 +153,7 @@ export default function KpisPage() {
         </div>
         <Button
           variant='outline'
-          className='border-sky-500 cursor-pointer text-sky-700 hover:bg-sky-50 hover:text-sky-800 mt-4 md:mt-0'
+          className='self-start border-sky-500 cursor-pointer text-sky-700 hover:bg-sky-50 hover:text-sky-800 md:self-auto'
           onClick={handleAddKpi}
           disabled={isLoadingKpis || isAddingKpi}>
           <PlusCircle className='mr-2 h-4 w-4 cursor-pointer' />
@@ -188,8 +188,8 @@ export default function KpisPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className='shadow-md border-border/40 rounded-lg overflow-hidden bg-card'>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 p-4 bg-muted/50 border-b'>
+        <Card className='gap-0 py-0 shadow-md border-border/40 rounded-lg overflow-hidden bg-card'>
+          <CardHeader className='flex flex-col gap-3 space-y-0 border-b bg-muted/50 p-4 sm:flex-row sm:items-center sm:justify-between'>
             <div className='flex items-center gap-3'>
               <BarChart2 className='h-5 w-5 text-sky-700' />
               <CardTitle className='text-lg font-semibold'>
@@ -200,11 +200,11 @@ export default function KpisPage() {
                 className='rounded-full px-2.5 py-0.5 text-xs font-semibold bg-sky-100 text-sky-800 border-sky-200'>
                 {filteredKpis.length}
               </Badge>
-              <CardDescription className='hidden md:block text-sm pl-2'>
+              <CardDescription className='hidden xl:block text-sm pl-2'>
                 Track and manage KPIs and targets
               </CardDescription>
             </div>
-            <div className='relative w-full max-w-xs'>
+            <div className='relative w-full sm:max-w-xs'>
               <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
               <Input
                 placeholder='Search by category or KPI...'
@@ -218,11 +218,17 @@ export default function KpisPage() {
             <Table>
               <TableHeader className='bg-muted/30'>
                 <TableRow>
-                  <TableHead className='pl-6 w-[20%]'>Category</TableHead>
-                  <TableHead className='w-[30%]'>KPI</TableHead>
-                  <TableHead>International Target</TableHead>
-                  <TableHead>National Target</TableHead>
-                  <TableHead className='text-right pr-6 w-44'>
+                  <TableHead className='hidden w-[18%] pl-6 md:table-cell'>
+                    Category
+                  </TableHead>
+                  <TableHead className='pl-4 sm:pl-6 md:pl-2'>KPI</TableHead>
+                  <TableHead className='hidden xl:table-cell'>
+                    International Target
+                  </TableHead>
+                  <TableHead className='hidden xl:table-cell'>
+                    National Target
+                  </TableHead>
+                  <TableHead className='pr-4 text-right sm:pr-6'>
                     Actions
                   </TableHead>
                 </TableRow>
@@ -246,42 +252,60 @@ export default function KpisPage() {
                       <TableRow
                         key={kpiObject.kpi_id}
                         className='hover:bg-muted/50 transition-colors'>
-                        <TableCell className='font-medium pl-6'>
+                        <TableCell className='hidden pl-6 font-medium whitespace-normal md:table-cell'>
                           {kpiObject.kpi_category}
                         </TableCell>
-                        <TableCell className='max-w-xs truncate'>
+                        <TableCell className='pl-4 whitespace-normal sm:pl-6 md:pl-2'>
+                          {/* The category column is hidden on small screens. */}
+                          <span className='block text-xs text-muted-foreground md:hidden'>
+                            {kpiObject.kpi_category}
+                          </span>
                           {kpiObject.kpi}
                         </TableCell>
-                        <TableCell>
-                          {kpiObject.kpi_international_target}
+                        {/* Targets are long, so they wrap and are cut to three lines. */}
+                        <TableCell className='hidden max-w-xs whitespace-normal xl:table-cell'>
+                          <p
+                            className='line-clamp-3'
+                            title={kpiObject.kpi_international_target}>
+                            {kpiObject.kpi_international_target}
+                          </p>
                         </TableCell>
-                        <TableCell>{kpiObject.kpi_national_target}</TableCell>
-                        <TableCell className='text-right pr-6'>
-                          <div className='flex gap-2 justify-end'>
+                        <TableCell className='hidden max-w-xs whitespace-normal xl:table-cell'>
+                          <p
+                            className='line-clamp-3'
+                            title={kpiObject.kpi_national_target}>
+                            {kpiObject.kpi_national_target}
+                          </p>
+                        </TableCell>
+                        <TableCell className='pr-4 text-right sm:pr-6'>
+                          {/* Icon buttons until there is room for their labels. */}
+                          <div className='flex justify-end gap-1'>
                             <Button
                               variant='ghost'
                               size='sm'
-                              onClick={() =>
-                                handleEditKpi(item)
-                              }
+                              title='Edit'
+                              onClick={() => handleEditKpi(item)}
                               disabled={isDeletingKpi || isLoadingForm}
-                              className='h-8 cursor-pointer hover:bg-sky-700/10 text-sky-800 flex items-center'>
-                              <Edit className='h-4 w-4 mr-1' />
-                              Edit
+                              className='cursor-pointer text-sky-800 hover:bg-sky-700/10'>
+                              <Edit className='h-4 w-4' />
+                              <span className='sr-only 2xl:not-sr-only'>Edit</span>
                             </Button>
                             <Button
                               variant='ghost'
                               size='sm'
+                              title='Delete'
                               onClick={() => handleDeleteKpi(kpiObject.kpi_id)}
                               disabled={isDeletingKpi || isLoadingForm}
-                              className='h-8 cursor-pointer hover:bg-red-700/10 text-red-800 flex items-center'>
+                              className='cursor-pointer text-red-800 hover:bg-red-700/10'>
                               {isDeletingKpi &&
                               isKpi?.kpiData.kpi_id === kpiObject.kpi_id ? (
-                                <Loader2 className='h-4 w-4 animate-spin mr-1' />
+                                <Loader2 className='h-4 w-4 animate-spin' />
                               ) : (
-                                <Trash2 className='h-4 w-4 mr-1' />
+                                <Trash2 className='h-4 w-4' />
                               )}
-                              Delete
+                              <span className='sr-only 2xl:not-sr-only'>
+                                Delete
+                              </span>
                             </Button>
                           </div>
                         </TableCell>

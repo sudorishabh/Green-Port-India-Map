@@ -27,11 +27,11 @@ export default function SignInPage() {
   };
 
   return (
-    <div className='flex flex-col gap-16 min-h-screen items-center justify-center bg-gray-100'>
+    <div className='flex flex-col gap-16 min-h-dvh items-center justify-center bg-gray-100 px-4'>
       {/* <h1 className='mb-4 text-center underline text-4xl font-medium text-sky-700'>
         Sustainable Roadmap Portal
       </h1> */}
-      <div className='w-full max-w-md rounded-lg bg-white p-8 shadow-md'>
+      <div className='w-full max-w-md rounded-lg bg-white p-6 shadow-md sm:p-8'>
         <h2 className='mb-6 text-center text-2xl font-bold text-gray-900'>
           Sign In
         </h2>

@@ -67,10 +67,6 @@ export const portSchema = z.object({
     .string()
     .regex(HEX_COLOR, "Must be a hex colour such as #ff0000")
     .optional(),
-  /** Google Maps zoom level. */
-  zoom: z.int().min(0).max(22).optional(),
-  zoom_center_lat: latitude().optional(),
-  zoom_center_lng: longitude().optional(),
 });
 
 /** Updates may send any subset of the fields. */

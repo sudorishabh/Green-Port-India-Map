@@ -53,9 +53,6 @@ export type Port = {
   ind_port_lng?: number | null;
   polyline_curve?: number | null;
   polyline_color?: string | null;
-  zoom?: number | null;
-  zoom_center_lat?: number | null;
-  zoom_center_lng?: number | null;
   created_at?: Date | string | null;
 };
 
@@ -64,5 +61,7 @@ export interface PortFormProps {
   onClose: () => void;
   portType?: "Indian" | "Other" | null;
   indianPorts?: Port[];
+  /** Partner ports of the hub being edited, to preview its route lines. */
+  partnerPorts?: Port[];
   editingPort?: Port | null;
 }

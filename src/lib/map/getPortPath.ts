@@ -1,3 +1,4 @@
+import { findHub, isHub, partnersOf } from "./ports";
 import { Port } from "./types";
 
 type PortPath = [
@@ -30,13 +31,8 @@ export const getPortPaths = (
 ): PortPath[] => {
   if (!port) return [];
 
-  const isHub = !port.ind_port_name;
-  const hub = isHub
-    ? port
-    : allPorts.find((p) => !p.ind_port_name && p.name === port.ind_port_name);
-  const partners = isHub
-    ? allPorts.filter((p) => p.ind_port_name === port.name)
-    : [port];
+  const hub = findHub(port, allPorts);
+  const partners = isHub(port) ? partnersOf(port, allPorts) : [port];
 
   return partners.map((partner) => [
     {

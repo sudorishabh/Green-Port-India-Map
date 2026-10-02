@@ -1,75 +1,73 @@
-import { useEffect, useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { KPIS, Port } from "@/lib/map/types";
-import GreenInitiativeFacts from "./GreenInitiativeFacts";
+import GreenInitiatives from "./GreenInitiatives";
 import PortFacts from "./PortFacts";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
-const ModalWindow = ({
-  port,
-  setIsModal,
-  kpis,
-}: {
+interface Props {
   port: Port;
-  setIsModal: (model: boolean) => void;
+  /** The hub `port` trades with, or `port` itself when it is a hub. */
+  hub: Port | undefined;
   kpis: KPIS[];
-}) => {
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  useEffect(() => {
-    document.body.classList.add("overflow-hidden");
-    return () => document.body.classList.remove("overflow-hidden");
-  }, []);
+  onClose: () => void;
+}
 
+/**
+ * Port details window. Radix Dialog closes it on Escape or a click outside,
+ * keeps keyboard focus inside while open and labels it for screen readers.
+ * Mount it only while a port is selected.
+ */
+const ModalWindow = ({ port, hub, kpis, onClose }: Props) => {
   return (
-    <div
-      className='scroller sm:bg-[rgba(0,0,0,0.54)] fixed w-full h-full top-0 left-0 z-9999 flex justify-center items-center transition ease-in-out duration-900 bg-white'
-      onClick={() => setIsModal(false)}>
-      <div
-        className='relative z-100 max-w-full sm:max-w-[90%]  md:max-w-[85%] lg:max-w-[80%] xl:max-w-[70%] w-full sm:max-h-172 h-full bg-white flex items-center rounded-lg sm:rounded-2xl md:rounded-2xl lg:xl:rounded-[1.7rem] sm:p-2 xl:p-4 sm:border-y-[0.8rem] sm:border-[#115D92] py-'
-        onClick={(e) => e.stopPropagation()}>
-        <div
-          key={port.port_id + port.country}
-          className='w-full flex flex-col overflow-y-auto lg:flex-row justify-between h-full xl:gap-2'>
-          <div className='lg:hidden gap-5 sm:mb-2'>
-            <h1 className='text-2xl mt-3 mb-1 sm:mb-0 sm:mt-0  text-gray-700 font-bold text-center tracking-tight'>
-              {port.name}
-            </h1>
-            <div className='text-center gap-2 text-[14px] flex justify-center items-center font-medium text-gray-500'>
-              {port.flag_url && (
-                <img
-                  src={port.flag_url}
-                  alt='Flag Icon'
-                  className='size-5 sm:size-6'
-                />
-              )}
-
-              <p>{port.country}</p>
+    <Dialog.Root
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className='fixed inset-0 z-50 bg-black/55' />
+        {/* Full screen on phones and short screens, a centred window elsewhere. */}
+        <Dialog.Content className='fixed inset-0 z-50 flex flex-col overflow-hidden bg-white shadow-2xl roomy:inset-auto roomy:top-1/2 roomy:left-1/2 roomy:h-[85vh] roomy:max-h-172 roomy:w-[90vw] roomy:max-w-6xl roomy:-translate-x-1/2 roomy:-translate-y-1/2 roomy:rounded-2xl roomy:lg:w-[80vw] roomy:xl:w-[70vw]'>
+          <header className='flex items-center gap-3 bg-brand px-4 py-3 text-white sm:px-6'>
+            {port.flag_url && (
+              <img
+                src={port.flag_url}
+                alt=''
+                className='size-7 shrink-0'
+              />
+            )}
+            <div className='min-w-0 flex-1'>
+              <Dialog.Title className='text-lg leading-snug font-semibold sm:text-xl'>
+                {port.name}
+              </Dialog.Title>
+              <Dialog.Description className='text-sm text-white/80'>
+                {port.city}, {port.country}
+              </Dialog.Description>
             </div>
-          </div>
-          {!isFullScreen ? <PortFacts port={port} /> : null}
-          <GreenInitiativeFacts
-            setIsFullScreen={setIsFullScreen}
-            isFullScreen={isFullScreen}
-            kpis={kpis}
-            portId={port?.port_id}
-          />
-          <button
-            className='bg-red-500 m-2 block sm:hidden py-2 rounded-md text-white font-lg text-lg'
-            onClick={() => setIsModal(false)}>
-            Close
-          </button>
-        </div>
+            <Dialog.Close
+              aria-label='Close'
+              className='flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white'>
+              <FontAwesomeIcon
+                icon={faXmark}
+                className='size-5'
+              />
+            </Dialog.Close>
+          </header>
 
-        <span
-          className='absolute sm:flex justify-center rounded-full items-center bg-slate-500 hover:bg-red-500 cursor-pointer -right-6 -top-5 hidden'
-          onClick={() => setIsModal(false)}>
-          <FontAwesomeIcon
-            icon={faXmark}
-            className='size-6 text-white p-1.5'
-          />
-        </span>
-      </div>
-    </div>
+          <div className='flex flex-1 flex-col gap-4 overflow-y-auto p-3 sm:p-4 lg:flex-row lg:overflow-hidden'>
+            <PortFacts
+              port={port}
+              hub={hub}
+            />
+            <GreenInitiatives
+              portId={port.port_id}
+              kpis={kpis}
+            />
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 };
 

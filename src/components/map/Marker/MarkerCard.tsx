@@ -1,74 +1,96 @@
+import { isHub } from "@/lib/map/ports";
 import { Port } from "@/lib/map/types";
-import React, {
-  FC,
-  useLayoutEffect,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
-import PortImage from "../PortImage";
+import React, { FC, useLayoutEffect, useRef, useState } from "react";
 
-interface Props {
+interface SummaryProps {
   port: Port;
-  clickedPort: Port | null;
-  setIsModal: (isModal: boolean) => void;
-  setModalPortData: (port: Port) => void;
+  /** Route colour of the port's network, for the dot beside its role. */
+  color: string;
+  /** Partner ports of a hub; unused for partners. */
+  partnerCount: number;
+  /**
+   * A selected port offers its details; a hovered port's preview says how to
+   * select it.
+   */
+  isSelected: boolean;
+  onOpenDetails: (port: Port) => void;
 }
 
-const MarkerHoverCard: FC<Props> = React.memo(
-  ({ port, clickedPort, setIsModal, setModalPortData }) => {
-    const [flip, setFlip] = useState(false);
-    const cardRef = useRef<HTMLDivElement>(null);
+/** Name, place and role of a port, shared by the marker card and mobile sheet. */
+export const PortSummary: FC<SummaryProps> = ({
+  port,
+  color,
+  partnerCount,
+  isSelected,
+  onOpenDetails,
+}) => {
+  const role = isHub(port)
+    ? `Indian hub · ${partnerCount} partner ${partnerCount === 1 ? "port" : "ports"}`
+    : `Partner of ${port.ind_port_name}`;
 
-    useLayoutEffect(() => {
-      if (clickedPort?.name !== port.name) return;
-
-      const card = cardRef.current;
-      if (!card) return;
-
-      const rect = card.getBoundingClientRect();
-      setFlip(rect.top < -10 || rect.bottom > window.innerHeight);
-    }, [clickedPort, port.name]);
-
-    const handleClickCard = useCallback(() => {
-      setIsModal(true);
-      setModalPortData(port);
-    }, [port, setIsModal, setModalPortData]);
-
-    return (
-      <div
-        ref={cardRef}
-        className={`absolute ${flip ? "top-10" : "bottom-14"}  
-      bg-white p-2 pb-1 rounded-lg w-36 sm:w-40 md:w-52 lg:w-56 left-[50%] translate-x-[-50%] shadow-2xl z-1000`}
-        onClick={handleClickCard}>
-        <div className='w-full'>
-          <PortImage
-            src={port.image_url}
-            className='rounded-md w-full h-auto object-cover aspect-4/3'
-            sizes='(max-width: 768px) 100vw, 230px'
-            alt='Port Image'
+  return (
+    <>
+      <p className='flex items-start gap-2 pr-6 text-sm leading-snug font-semibold text-gray-800 sm:pr-0'>
+        {port.flag_url && (
+          <img
+            src={port.flag_url}
+            alt=''
+            className='mt-0.5 size-4 shrink-0'
           />
+        )}
+        {port.name}
+      </p>
+      <p className='mt-0.5 text-xs text-gray-500'>
+        {port.city}, {port.country}
+      </p>
+      <p className='mt-2 flex items-center gap-1.5 text-xs text-gray-600'>
+        <span
+          className='size-2 shrink-0 rounded-full'
+          style={{ backgroundColor: color }}
+        />
+        {role}
+      </p>
 
-          <p className='text-center text-[0.8rem] md:text-[1rem] font-semibold text-gray-600 my-1'>
-            {port?.name}
-          </p>
-          <div className='text-center gap-1 text-[0.8rem] flex justify-center items-center text-gray-600'>
-            {port.flag_url && (
-              <img
-                src={port.flag_url}
-                alt='Flag Icon'
-                className='size-5 sm:size-6'
-              />
-            )}
+      {isSelected ? (
+        <button
+          type='button'
+          onClick={() => onOpenDetails(port)}
+          className='mt-3 w-full rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'>
+          View green initiatives →
+        </button>
+      ) : (
+        <p className='mt-2 text-xs text-gray-400'>
+          Click to see its trade routes
+        </p>
+      )}
+    </>
+  );
+};
 
-            <p>{port?.country}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-);
+/**
+ * Card above a hovered or selected marker. On phones and short screens the
+ * selected port is shown in a sheet at the bottom of the map instead, as a card
+ * beside the marker would run off the screen.
+ */
+const MarkerCard: FC<SummaryProps> = (props) => {
+  const [flip, setFlip] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
-MarkerHoverCard.displayName = "MarkerHoverCard";
+  // Show the card below the marker when there is no room above it.
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    if (card) setFlip(card.getBoundingClientRect().top < 8);
+  }, []);
 
-export default MarkerHoverCard;
+  return (
+    <div
+      ref={cardRef}
+      className={`absolute left-1/2 w-60 -translate-x-1/2 cursor-default rounded-xl bg-white p-3 text-left shadow-xl ${
+        flip ? "top-full mt-3" : "bottom-full mb-3"
+      } ${props.isSelected ? "hidden roomy:block" : "pointer-events-none"}`}>
+      <PortSummary {...props} />
+    </div>
+  );
+};
+
+export default React.memo(MarkerCard);

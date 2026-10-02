@@ -21,9 +21,6 @@ type PortFacts = Pick<
 export interface HubPort extends PortFacts {
   /** Colour of the route lines drawn to this port's partners. */
   polyline_color: string;
-  /** Map view applied when the port is clicked, framing all of its routes. */
-  zoom: number;
-  zoom_center: { lat: number; lng: number };
 }
 
 export interface PartnerPort extends PortFacts {
@@ -45,8 +42,6 @@ export const hubPorts = [
     port_capacity: 8,
     dominant_cargo: "Containers, liquid bulk (POL/chemicals), cement",
     polyline_color: "#00008b",
-    zoom: 4,
-    zoom_center: { lat: 42.188, lng: 44.011 },
   },
   {
     name: "Visakhapatnam Port Authority",
@@ -59,8 +54,6 @@ export const hubPorts = [
     port_capacity: 1,
     dominant_cargo: "Iron ore, coal, POL, fertilisers, containers",
     polyline_color: "#ff4800",
-    zoom: 3,
-    zoom_center: { lat: 33.687, lng: 9.538 },
   },
   {
     name: "V.O. Chidambaranar Port Authority",
@@ -73,8 +66,6 @@ export const hubPorts = [
     port_capacity: 1,
     dominant_cargo: "Thermal coal, containers, limestone, fertilisers",
     polyline_color: "#800080",
-    zoom: 3,
-    zoom_center: { lat: 18.034, lng: 1.66 },
   },
   {
     name: "Deendayal Port Authority",
@@ -87,8 +78,6 @@ export const hubPorts = [
     port_capacity: 1,
     dominant_cargo: "Crude oil & POL, coal, fertilisers, edible oil, salt",
     polyline_color: "#ff0000",
-    zoom: 5,
-    zoom_center: { lat: 29.489, lng: 60.864 },
   },
 ] as const satisfies readonly HubPort[];
 
