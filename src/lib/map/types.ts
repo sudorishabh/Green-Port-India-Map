@@ -26,6 +26,14 @@ export interface Port {
   created_at: string;
 }
 
+export interface TargetLink {
+  link_id: number;
+  target_type: string;
+  link_url: string;
+  created_at: string;
+  kpi_id: number;
+}
+
 export interface KPIS {
   kpiData: {
     kpi_id: number;
@@ -35,66 +43,17 @@ export interface KPIS {
     kpi_international_target: string;
   };
   targetsLinks: {
-    international: {
-      link_id: number;
-      target_type: string;
-      link_url: string;
-      created_at: string;
-      kpi_id: number;
-    }[];
-    national: {
-      link_id: number;
-      target_type: string;
-      link_url: string;
-      created_at: string;
-      kpi_id: number;
-    }[];
+    international: TargetLink[];
+    national: TargetLink[];
   };
 }
 
-export interface IInitiatives {
-  created_at: string;
-  initiative: string;
+/** One of a port's green initiatives, filed under a KPI. */
+export interface Initiative {
   initiative_id: number;
+  initiative: string;
   initiative_url: string;
-  kpi: string;
-  kpi_id: number;
+  kpi_id: number | null;
   port_id: number;
-}
-
-export interface KpisByCategory {
-  [category: string]: Array<{
-    kpi_id: number;
-    kpi: string;
-    kpi_national_target: string;
-    kpi_international_target: string;
-    kpi_international_target_links: {
-      link_id: number;
-      target_type: string;
-      link_url: string;
-      created_at: string;
-      kpi_id: number;
-    }[];
-    kpi_nation_target_links: {
-      link_id: number;
-      target_type: string;
-      link_url: string;
-      created_at: string;
-      kpi_id: number;
-    }[];
-  }>;
-}
-
-export interface ITargetSection {
-  label: string;
-  targetText: string;
-  links:
-    | {
-        link_id: number;
-        target_type: string;
-        link_url: string;
-        created_at: string;
-        kpi_id: number;
-      }[]
-    | undefined;
+  created_at: string;
 }

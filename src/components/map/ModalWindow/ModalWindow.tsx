@@ -1,7 +1,6 @@
-import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { KPIS, Port } from "@/lib/map/types";
-import GreenInitiativeFacts from "./GreenInitiativeFacts";
+import GreenInitiatives from "./GreenInitiatives";
 import PortFacts from "./PortFacts";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -20,8 +19,6 @@ interface Props {
  * Mount it only while a port is selected.
  */
 const ModalWindow = ({ port, hub, kpis, onClose }: Props) => {
-  const [isFullScreen, setIsFullScreen] = useState(false);
-
   return (
     <Dialog.Root
       open
@@ -58,15 +55,13 @@ const ModalWindow = ({ port, hub, kpis, onClose }: Props) => {
           </header>
 
           <div className='flex flex-1 flex-col gap-4 overflow-y-auto p-3 sm:p-4 lg:flex-row lg:overflow-hidden'>
-            {!isFullScreen ? <PortFacts
-                port={port}
-                hub={hub}
-              /> : null}
-            <GreenInitiativeFacts
-              setIsFullScreen={setIsFullScreen}
-              isFullScreen={isFullScreen}
-              kpis={kpis}
+            <PortFacts
+              port={port}
+              hub={hub}
+            />
+            <GreenInitiatives
               portId={port.port_id}
+              kpis={kpis}
             />
           </div>
         </Dialog.Content>

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Port, IInitiatives, KPIS } from "@/lib/map/types";
+import { Initiative, KPIS, Port } from "@/lib/map/types";
 
 // Served by this app's own Route Handlers (src/app/api).
 const baseUrl = "/api";
@@ -26,20 +26,13 @@ export async function getKpis(): Promise<KPIS[]> {
   }
 }
 
-// KPI Initiatives API methods
-export async function getKpiInitiatives({
-  portId,
-  kpiId,
-}: {
-  portId: string;
-  kpiId: string;
-}): Promise<IInitiatives[]> {
+// All of a port's green initiatives, for every KPI
+export async function getPortInitiatives(portId: number): Promise<Initiative[]> {
   try {
-    const url = `${baseUrl}/kpi/initiatives?portId=${portId}&kpiId=${kpiId}`;
-    const response = await axios.get(url);
+    const response = await axios.get(`${baseUrl}/kpi/port-initiatives/${portId}`);
     return response.data.data;
   } catch (error) {
-    console.error("Error fetching kpi-initiatives:", error);
+    console.error("Error fetching port initiatives:", error);
     throw error;
   }
 }
