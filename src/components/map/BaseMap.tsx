@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import * as L from "leaflet";
-import { extendLeaflet } from "@india-boundary-corrector/leaflet-layer";
+import {
+  extendLeaflet,
+  LayerConfig,
+} from "@india-boundary-corrector/leaflet-layer";
 import { TileLayer, useMap } from "react-leaflet";
 
 extendLeaflet(L);
@@ -9,26 +12,33 @@ export type MapType = "map" | "satellite";
 
 const MAX_ZOOM = 19;
 
-const OSM_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-const CARTO_KEY = process.env.NEXT_PUBLIC_CARTO_KEY;
+/**
+ * Esri's World Street Map: labelled in English everywhere, unlike
+ * OpenStreetMap's tiles, which use each country's own script, and free
+ * without a key, unlike CARTO's.
+ */
+const STREET_TILES =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}";
+const STREET_ATTRIBUTION =
+  "Tiles &copy; Esri &mdash; Sources: Esri, HERE, Garmin, USGS, Intermap, INCREMENT P, NRCan, Esri Japan, METI, Esri China (Hong Kong), Esri Korea, Esri (Thailand), NGCC, &copy; OpenStreetMap contributors, and the GIS User Community";
 
 /**
- * CARTO's Voyager is closest to Google's road map but needs a key. Without
- * one, OpenStreetMap's own tiles are used, which are free for moderate
- * traffic. `layerConfig` tells the boundary corrector how each draws borders.
+ * How the boundary corrector redraws borders on the street map, which it has
+ * no built-in config for: the wrong lines blurred away, and India's drawn in
+ * the warm grey and widths of Esri's own borders. Natural Earth's coarser
+ * lines are used up to zoom 4, OpenStreetMap's after.
  */
-const STREET_TILES = CARTO_KEY
-  ? {
-      url: `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`,
-      layerConfig: "cartodb-light-retina",
-      attribution: `${OSM_ATTRIBUTION} &copy; <a href="https://carto.com/attributions">CARTO</a>`,
-    }
-  : {
-      url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      layerConfig: "osm-carto",
-      attribution: OSM_ATTRIBUTION,
-    };
+const STREET_BORDERS = new LayerConfig({
+  id: "esri-world-street-map",
+  tileUrlTemplates: [STREET_TILES],
+  lineWidthStops: { 3: 0.8, 5: 1.5, 8: 2, 12: 3 },
+  lineStyles: [
+    { color: "rgb(180, 176, 160)", layerSuffix: "ne", endZoom: 4, delWidthFactor: 3 },
+    { color: "rgb(180, 176, 160)", layerSuffix: "ne-disp", endZoom: 4, delWidthFactor: 3 },
+    { color: "rgb(130, 128, 115)", layerSuffix: "osm", startZoom: 5, delWidthFactor: 2 },
+    { color: "rgb(130, 128, 115)", layerSuffix: "osm-disp", startZoom: 5, delWidthFactor: 2 },
+  ],
+});
 
 const SATELLITE_TILES =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -44,16 +54,16 @@ const SATELLITE_ATTRIBUTION =
 const BOUNDARY_CORRECTIONS = "/map/india_boundary_corrections.pmtiles";
 
 /**
- * The street map, which follows OpenStreetMap's borders, redrawn with India's
- * official boundaries.
+ * The street map, which shows disputed borders as they stand on the ground,
+ * redrawn with India's official boundaries.
  */
 const StreetTiles = () => {
   const map = useMap();
 
   useEffect(() => {
-    const { url, ...options } = STREET_TILES;
-    const layer = new L.TileLayer.IndiaBoundaryCorrected(url, {
-      ...options,
+    const layer = new L.TileLayer.IndiaBoundaryCorrected(STREET_TILES, {
+      layerConfig: STREET_BORDERS,
+      attribution: STREET_ATTRIBUTION,
       pmtilesUrl: BOUNDARY_CORRECTIONS,
       maxZoom: MAX_ZOOM,
       // For pages to restyle, as the public map does.
