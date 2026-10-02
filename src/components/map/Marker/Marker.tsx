@@ -1,5 +1,5 @@
-import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import React, { useMemo } from "react";
+import HtmlMarker from "../HtmlMarker";
 import MarkerCard from "./MarkerCard";
 import { Port } from "@/lib/map/types";
 import PortPin, { FALLBACK_PIN_COLOR } from "./PortPin";
@@ -49,15 +49,14 @@ const Markers: React.FC<MarkersProps> = ({
           FALLBACK_PIN_COLOR;
 
         return (
-          <AdvancedMarker
+          <HtmlMarker
             key={port.port_id}
             position={position}
             title={port.name}
-            // Centred, so route lines start and end in the middle of the pin.
-            anchorLeft='-50%'
-            anchorTop='-50%'
-            zIndex={isHighlighted ? 100 : isHub(port) ? 2 : 1}
-            onClick={() => onSelect(port)}>
+            // Leaflet stacks markers by latitude, so these offsets are large
+            // enough to lift a port above any marker it overlaps.
+            zIndexOffset={isHighlighted ? 10000 : isHub(port) ? 1000 : 0}
+            eventHandlers={{ click: () => onSelect(port) }}>
             <span
               onMouseEnter={() => setHoveredPort(port)}
               onMouseLeave={() => setHoveredPort(null)}>
@@ -77,7 +76,7 @@ const Markers: React.FC<MarkersProps> = ({
                 onOpenDetails={onSelect}
               />
             )}
-          </AdvancedMarker>
+          </HtmlMarker>
         );
       })}
     </>

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 /* Layered so Tailwind utilities (size-*, w-*, ...) override FontAwesome's defaults. */
 @import "@fortawesome/fontawesome-svg-core/styles.css" layer(base);
+/* Layered too, so utilities can size things inside markers, such as flags. */
+@import "leaflet/dist/leaflet.css" layer(base);
 
 @theme {
   --color-background: var(--background);
@@ -94,6 +96,11 @@
   *::-webkit-scrollbar-thumb {
     background-color: rgba(187, 187, 187, 0.524);
     border-radius: 20px;
+  }
+
+  /* Marker cards use the page's font rather than Leaflet's. */
+  .leaflet-container {
+    font-family: inherit;
   }
 }
 

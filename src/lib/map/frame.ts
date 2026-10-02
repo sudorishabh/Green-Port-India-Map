@@ -1,3 +1,5 @@
+import { latLngBounds, LatLngLiteral, Map as LeafletMap } from "leaflet";
+
 export interface FramePadding {
   top: number;
   right: number;
@@ -11,9 +13,9 @@ export interface FramePadding {
  * out, centred as near to them as possible while keeping `port` on screen.
  */
 export function frameRoutes(
-  map: google.maps.Map,
-  port: google.maps.LatLngLiteral,
-  points: google.maps.LatLngLiteral[],
+  map: LeafletMap,
+  port: LatLngLiteral,
+  points: LatLngLiteral[],
   padding: FramePadding,
   minZoom: number
 ) {
@@ -22,23 +24,24 @@ export function frameRoutes(
     return;
   }
 
-  const bounds = new google.maps.LatLngBounds();
-  points.forEach((point) => bounds.extend(point));
+  const bounds = latLngBounds(points);
 
-  const width = map.getDiv().clientWidth;
+  const width = map.getSize().x;
   // The world is 256px wide at zoom 0 and doubles with each level.
   const pxPerDegree = (256 * 2 ** minZoom) / 360;
-  const routesWidth = bounds.toSpan().lng() * pxPerDegree;
+  const routesWidth = (bounds.getEast() - bounds.getWest()) * pxPerDegree;
   if (routesWidth + padding.left + padding.right <= width) {
-    map.fitBounds(bounds, padding);
+    map.fitBounds(bounds, {
+      paddingTopLeft: [padding.left, padding.top],
+      paddingBottomRight: [padding.right, padding.bottom],
+    });
     return;
   }
 
   const center = bounds.getCenter();
   const lng = Math.min(
-    Math.max(center.lng(), port.lng - (width / 2 - padding.right) / pxPerDegree),
+    Math.max(center.lng, port.lng - (width / 2 - padding.right) / pxPerDegree),
     port.lng + (width / 2 - padding.left) / pxPerDegree
   );
-  map.setZoom(minZoom);
-  map.panTo({ lat: center.lat(), lng });
+  map.setView({ lat: center.lat, lng }, minZoom);
 }

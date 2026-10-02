@@ -5,12 +5,8 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import {
-  ControlPosition,
-  Map,
-  Polyline,
-  useMap,
-} from "@vis.gl/react-google-maps";
+import { LatLngBoundsLiteral, Map as LeafletMap } from "leaflet";
+import { MapContainer, Polyline, ZoomControl } from "react-leaflet";
 import Marker from "@/components/map/Marker/Marker";
 import { KPIS, Port } from "@/lib/map/types";
 import ModalWindow from "./ModalWindow/ModalWindow";
@@ -21,6 +17,8 @@ import Loader from "./Loader";
 import PortsPanel, { PANEL_WIDTH } from "./PortsPanel";
 import { PortSummary } from "./Marker/MarkerCard";
 import { FALLBACK_PIN_COLOR } from "./Marker/PortPin";
+import BaseMap, { MapType } from "./BaseMap";
+import MapTypeSwitch from "./MapTypeSwitch";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
@@ -29,10 +27,10 @@ const DEFAULT_ZOOM = 5;
 const DEFAULT_COORDS = { lat: 23, lng: 78.7861 };
 
 const MIN_ZOOM = 3;
-const WORLD_BOUNDS = {
-  latLngBounds: { north: 85, south: -85, west: -180, east: 180 },
-  strictBounds: true,
-};
+const WORLD_BOUNDS: LatLngBoundsLiteral = [
+  [-85, -180],
+  [85, 180],
+];
 
 const subscribeToResize = (onResize: () => void) => {
   window.addEventListener("resize", onResize);
@@ -90,10 +88,10 @@ const RouteLines = ({ routes }: { routes: Route[] }) =>
   routes.map(({ key, path, color }) => (
     <Polyline
       key={key}
-      path={path}
-      strokeColor={color}
-      strokeOpacity={1}
-      strokeWeight={1.5}
+      positions={path}
+      // Only drawn to be seen: clicks on a line go through to the map.
+      interactive={false}
+      pathOptions={{ color, opacity: 1, weight: 1.5 }}
     />
   ));
 
@@ -113,7 +111,8 @@ const MapBoard = ({
   // Null until toggled: the guide starts open, except on compact screens.
   const [panelOpen, setPanelOpen] = useState<boolean | null>(null);
 
-  const map = useMap();
+  const [map, setMap] = useState<LeafletMap | null>(null);
+  const [mapType, setMapType] = useState<MapType>("map");
   const minZoom = useMinZoom();
   const isCompact = useIsCompact();
   const isPanelOpen = panelOpen ?? !isCompact;
@@ -148,6 +147,20 @@ const MapBoard = ({
     setClickedPort(null);
   }, []);
 
+  // The map reads its options only when it is created.
+  useEffect(() => {
+    map?.setMinZoom(minZoom);
+  }, [map, minZoom]);
+
+  // Clicks on markers stop at the marker, so only the map itself clears the
+  // selection.
+  useEffect(() => {
+    map?.on("click", handleMapClick);
+    return () => {
+      map?.off("click", handleMapClick);
+    };
+  }, [map, handleMapClick]);
+
   // A second selection of the same port opens its details. On compact screens
   // the guide closes so the map and the selected port can be seen.
   const handleSelectPort = useCallback(
@@ -166,18 +179,21 @@ const MapBoard = ({
 
   return (
     <>
-      <Map
-        onClick={handleMapClick}
-        mapId={process.env.NEXT_PUBLIC_MAP_ID}
-        defaultCenter={DEFAULT_COORDS}
-        defaultZoom={DEFAULT_ZOOM}
+      <MapContainer
+        ref={setMap}
+        center={DEFAULT_COORDS}
+        zoom={DEFAULT_ZOOM}
+        // Zoom in tenths, so routes are framed as closely as they fit.
+        zoomSnap={0.1}
         minZoom={minZoom}
-        restriction={WORLD_BOUNDS}
-        // The guide panel takes the top left, and compact screens have no room.
-        mapTypeControl={!isCompact}
-        mapTypeControlOptions={{ position: ControlPosition.TOP_RIGHT }}
-        streetViewControl={false}
-        fullscreenControl={false}>
+        maxBounds={WORLD_BOUNDS}
+        maxBoundsViscosity={1}
+        zoomControl={false}
+        // Its own stacking context keeps the map's layers under the guide
+        // panel and the selection sheet.
+        className='isolate h-full'>
+        <BaseMap type={mapType} />
+        <ZoomControl position='bottomright' />
         <RouteLines routes={selectedRoutes} />
         <RouteLines routes={hoveredRoutes} />
         <Marker
@@ -187,7 +203,15 @@ const MapBoard = ({
           setHoveredPort={setHoveredPort}
           hoveredPort={hoveredPort}
         />
-      </Map>
+      </MapContainer>
+      {/* The guide panel takes the top left, and compact screens have no
+          room. */}
+      {isCompact ? null : (
+        <MapTypeSwitch
+          value={mapType}
+          onChange={setMapType}
+        />
+      )}
       <PortsPanel
         ports={ports}
         selectedPort={clickedPort}
