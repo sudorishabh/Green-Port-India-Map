@@ -19,10 +19,7 @@ export interface Port {
   ind_port_lat?: number;
   ind_port_lng?: number;
   polyline_curve?: number;
-  zoom?: number;
   polyline_color?: string;
-  zoom_center_lat?: number;
-  zoom_center_lng?: number;
   created_at: string;
 }
 

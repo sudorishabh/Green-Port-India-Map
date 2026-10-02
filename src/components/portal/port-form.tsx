@@ -79,9 +79,6 @@ function toFormValues(
       ind_port_lng: undefined,
       polyline_curve: undefined,
       polyline_color: undefined,
-      zoom: undefined,
-      zoom_center_lat: undefined,
-      zoom_center_lng: undefined,
     };
   }
 
@@ -108,9 +105,6 @@ function toFormValues(
     ind_port_lng: toNumber(port.ind_port_lng),
     polyline_curve: toNumber(port.polyline_curve),
     polyline_color: port.polyline_color || undefined,
-    zoom: toNumber(port.zoom),
-    zoom_center_lat: toNumber(port.zoom_center_lat),
-    zoom_center_lng: toNumber(port.zoom_center_lng),
   };
 }
 
@@ -469,71 +463,10 @@ export function PortForm({
                     Indian Port Map Settings
                   </h3>
                   <p className='text-sm text-emerald-700 dark:text-emerald-400 mb-4'>
-                    Configure map display settings for connections originating
-                    from this Indian port.
+                    Choose the colour of the route lines drawn from this port to
+                    its partner ports. The map frames them automatically.
                   </p>
                   <div className='grid md:grid-cols-2 gap-6'>
-                    {/* Zoom Center Lat/Lng - Removed as likely derived or less critical for initial setup */}
-                    <div className='space-y-2'>
-                      <Label htmlFor='zoom_center_lat'>
-                        Zoom Center Latitude *
-                      </Label>
-                      <Input
-                        id='zoom_center_lat'
-                        type='number'
-                        step='any'
-                        {...register(
-                          "zoom_center_lat",
-                          coordinateRules("Zoom Center Latitude", 90)
-                        )}
-                        placeholder='Enter zoom center latitude'
-                      />
-                      {errors.zoom_center_lat && (
-                        <p className='text-sm text-destructive'>
-                          {errors.zoom_center_lat.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className='space-y-2'>
-                      <Label htmlFor='zoom_center_lng'>
-                        Zoom Center Longitude *
-                      </Label>
-                      <Input
-                        id='zoom_center_lng'
-                        type='number'
-                        step='any'
-                        {...register(
-                          "zoom_center_lng",
-                          coordinateRules("Zoom Center Longitude", 180)
-                        )}
-                        placeholder='Enter zoom center longitude'
-                      />
-                      {errors.zoom_center_lng && (
-                        <p className='text-sm text-destructive'>
-                          {errors.zoom_center_lng.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className='space-y-2'>
-                      <Label htmlFor='zoom'>Default Map Zoom *</Label>
-                      <Input
-                        id='zoom'
-                        type='number'
-                        step='1'
-                        min='1'
-                        max='20'
-                        {...register("zoom", {
-                          setValueAs: toNumber,
-                          required: "Default Zoom is required",
-                        })}
-                        placeholder='E.g., 5'
-                      />
-                      {errors.zoom && (
-                        <p className='text-sm text-destructive'>
-                          {errors.zoom.message}
-                        </p>
-                      )}
-                    </div>
                     <div className='space-y-2'>
                       <Label htmlFor='polyline_color'>
                         Connection Line Color *

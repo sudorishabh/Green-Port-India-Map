@@ -49,22 +49,9 @@ export const portMaster = pgTable("port_master", {
     "0.000"
   ),
   polyline_curve: integer("polyline_curve").notNull().default(4),
-  zoom: integer("zoom").notNull().default(3),
   polyline_color: varchar("polyline_color", { length: 100 })
     .notNull()
     .default("#000000"),
-  zoom_center_lat: decimal("zoom_center_lat", {
-    precision: 6,
-    scale: 3,
-  })
-    .notNull()
-    .default("5.6"),
-  zoom_center_lng: decimal("zoom_center_lng", {
-    precision: 6,
-    scale: 3,
-  })
-    .notNull()
-    .default("5.6"),
   created_at: timestamp("created_at").notNull().defaultNow(),
 });
 

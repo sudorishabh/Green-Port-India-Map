@@ -39,7 +39,6 @@ const coord = (value: number) => value.toFixed(3);
 function hubRow({
   lat,
   lng,
-  zoom_center,
   port_capacity,
   ...port
 }: HubPort): PortRow {
@@ -53,8 +52,6 @@ function hubRow({
     port_capacity: String(port_capacity),
     // Ports without an Indian port name are drawn as hubs on the map.
     ind_port_name: "",
-    zoom_center_lat: coord(zoom_center.lat),
-    zoom_center_lng: coord(zoom_center.lng),
   };
 }
 
