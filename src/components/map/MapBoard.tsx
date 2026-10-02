@@ -14,7 +14,6 @@ import ModalWindow from "./ModalWindow/ModalWindow";
 import { frameRoutes, FramePadding } from "@/lib/map/frame";
 import { getRoutes, Route } from "@/lib/map/routes";
 import { connectedPorts, findHub, isHub, partnersOf } from "@/lib/map/ports";
-import Loader from "./Loader";
 import PortsPanel, { PANEL_WIDTH } from "./PortsPanel";
 import { PortSummary } from "./Marker/MarkerCard";
 import { FALLBACK_PIN_COLOR } from "./Marker/PortPin";
@@ -128,11 +127,12 @@ const HighlightedLines = ({ routes }: { routes: Route[] }) =>
 const MapBoard = ({
   ports,
   kpis,
-  isLoading,
+  onTilesLoad,
 }: {
   ports: Port[];
   kpis: KPIS[];
-  isLoading: boolean;
+  /** Called each time the map's tiles in view have loaded. */
+  onTilesLoad?: () => void;
 }) => {
   const [detailsPort, setDetailsPort] = useState<Port | null>(null);
   const [clickedPort, setClickedPort] = useState<Port | null>(null);
@@ -219,8 +219,6 @@ const MapBoard = ({
     [clickedPort, isCompact],
   );
 
-  if (isLoading) return <Loader />;
-
   return (
     <>
       <MapContainer
@@ -236,7 +234,10 @@ const MapBoard = ({
         // Its own stacking context keeps the map's layers under the guide
         // panel and the selection sheet.
         className='isolate h-full'>
-        <BaseMap type={mapType} />
+        <BaseMap
+          type={mapType}
+          onLoad={onTilesLoad}
+        />
         <ZoomControl position='bottomright' />
         <NetworkLines
           routes={networkRoutes}

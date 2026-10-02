@@ -8,6 +8,30 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand: #115d92;
+  /* Behind the loading screen: a pale blue grey, close to the toned-down sea
+     of the street map it fades into. */
+  --color-sea: #eef3f6;
+
+  /* A route on the loading screen drawing out, holding, then fading for the
+     next round. */
+  --animate-route-draw: route-draw 3s ease-in-out infinite both;
+
+  @keyframes route-draw {
+    0% {
+      stroke-dashoffset: 1;
+      opacity: 1;
+    }
+    30%,
+    75% {
+      stroke-dashoffset: 0;
+      opacity: 1;
+    }
+    90%,
+    100% {
+      stroke-dashoffset: 0;
+      opacity: 0;
+    }
+  }
 }
 
 /*

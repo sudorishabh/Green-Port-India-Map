@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import * as L from "leaflet";
 import {
   extendLeaflet,
@@ -53,12 +53,20 @@ const SATELLITE_ATTRIBUTION =
  */
 const BOUNDARY_CORRECTIONS = "/map/india_boundary_corrections.pmtiles";
 
+interface Props {
+  type?: MapType;
+  /** Called each time the tiles in view have loaded, or failed to. */
+  onLoad?: () => void;
+}
+
 /**
  * The street map, which shows disputed borders as they stand on the ground,
  * redrawn with India's official boundaries.
  */
-const StreetTiles = () => {
+const StreetTiles = ({ onLoad }: Pick<Props, "onLoad">) => {
   const map = useMap();
+  // Read when tiles load, so a new callback doesn't recreate the layer.
+  const handleLoad = useEffectEvent(() => onLoad?.());
 
   useEffect(() => {
     const layer = new L.TileLayer.IndiaBoundaryCorrected(STREET_TILES, {
@@ -69,6 +77,7 @@ const StreetTiles = () => {
       // For pages to restyle, as the public map does.
       className: "street-tiles",
     }).addTo(map);
+    layer.on("load", () => handleLoad());
     return () => {
       layer.remove();
     };
@@ -81,15 +90,16 @@ const StreetTiles = () => {
  * The map's background. Satellite imagery has no borders or labels to
  * correct, so it is drawn as it comes.
  */
-const BaseMap = ({ type = "map" }: { type?: MapType }) =>
+const BaseMap = ({ type = "map", onLoad }: Props) =>
   type === "satellite" ? (
     <TileLayer
       url={SATELLITE_TILES}
       maxZoom={MAX_ZOOM}
       attribution={SATELLITE_ATTRIBUTION}
+      eventHandlers={onLoad ? { load: onLoad } : undefined}
     />
   ) : (
-    <StreetTiles />
+    <StreetTiles onLoad={onLoad} />
   );
 
 export default BaseMap;
