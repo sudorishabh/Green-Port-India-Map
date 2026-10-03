@@ -6,6 +6,22 @@ An interactive map of India's ports, their trade routes and their progress on gr
 - **Admin portal** (`/portal`): sign in to manage ports, KPIs and their target links, green initiatives and portal users.
 - **API** (`/api/*`): Route Handlers backed by PostgreSQL through Drizzle ORM, used by both.
 
+![The public map: India's four hub ports, the trade routes to their partner ports abroad, and the guide panel listing the hubs](docs/screenshots/map-overview.webp)
+
+## Screenshots
+
+Select a hub port, from the guide panel or the map, to highlight its trade routes and partner ports.
+
+![Jawaharlal Nehru Port Authority selected, with its routes to five European partner ports highlighted](docs/screenshots/hub-routes.webp)
+
+Click a partner port to see which hub it trades with and the route between them.
+
+![Rivers Port in Port Harcourt selected, showing its route to V.O. Chidambaranar Port Authority](docs/screenshots/partner-port.webp)
+
+**View green initiatives** opens a port's details: its key facts and its green initiatives, grouped by KPI.
+
+![Deendayal Port Authority's details, with port facts on the left and green initiatives by KPI on the right](docs/screenshots/port-details.webp)
+
 ## Getting started
 
 You need Node.js 24+ (the `db:*` scripts run TypeScript files directly with Node) and a PostgreSQL database.
@@ -69,6 +85,8 @@ cp node_modules/@india-boundary-corrector/data/india_boundary_corrections.pmtile
 ## Project structure
 
 ```
+docs/
+  screenshots/          Screenshots used in this readme
 public/
   flags/                Country flags, matched by country name
   map/                  India boundary corrections (see Map tiles)
